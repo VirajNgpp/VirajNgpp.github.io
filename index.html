@@ -1,0 +1,3326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ExpensePulse - Premium Personal Expense Tracker</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ExpensePulse">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Theme Variables - True OLED Black Palette */
+    :root {
+      --bg-outer: #000000;
+      --bg-main: #000000;
+      --bg-surface: #09090b;
+      --bg-card: rgba(18, 18, 22, 0.72);
+      --bg-card-subtle: rgba(26, 26, 32, 0.6);
+      --bg-input: rgba(10, 10, 14, 0.8);
+      --border-main: rgba(255, 255, 255, 0.12);
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --nav-bg: rgba(8, 8, 10, 0.85);
+      --nav-border: rgba(255, 255, 255, 0.1);
+      --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+      --donut-empty: #27272a;
+    }
+
+    .theme-light {
+      --bg-outer: #e2e8f0;
+      --bg-main: #f0f4f9;
+      --bg-surface: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.75);
+      --bg-card-subtle: rgba(245, 248, 252, 0.7);
+      --bg-input: rgba(240, 244, 250, 0.85);
+      --border-main: rgba(255, 255, 255, 0.8);
+      --border-subtle: rgba(226, 232, 240, 0.8);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --nav-bg: rgba(255, 255, 255, 0.85);
+      --nav-border: rgba(255, 255, 255, 0.9);
+      --card-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.05);
+      --donut-empty: #e2e8f0;
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+      transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                  border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                  color 0.2s ease, 
+                  box-shadow 0.3s ease;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, sans-serif;
+      user-select: none;
+      background-color: var(--bg-outer);
+      overflow-x: hidden;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* SMOOTH SCREEN TRANSITIONS */
+    .tab-screen {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+      transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      display: none;
+      will-change: opacity, transform;
+    }
+    .tab-screen.tab-active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* SMOOTH MODAL TRANSITIONS (Backdrop + Bottom Sheet / Dialog) */
+    .smooth-modal {
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .smooth-modal.modal-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Bottom sheet slide transition */
+    .smooth-sheet {
+      transform: translateY(105%);
+      transition: transform 0.38s cubic-bezier(0.2, 0.9, 0.2, 1);
+      will-change: transform;
+    }
+    .smooth-modal.modal-active .smooth-sheet {
+      transform: translateY(0);
+    }
+
+    /* Center dialog popup transition */
+    .smooth-dialog {
+      transform: scale(0.9) translateY(20px);
+      opacity: 0;
+      transition: transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1), 
+                  opacity 0.26s ease;
+      will-change: transform, opacity;
+    }
+    .smooth-modal.modal-active .smooth-dialog {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    /* Fullscreen fade transition */
+    .smooth-fullscreen-img {
+      transform: scale(0.92);
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .smooth-modal.modal-active .smooth-fullscreen-img {
+      transform: scale(1);
+    }
+
+    /* LIQUID GLASS DESIGN SYSTEM */
+    .liquid-glass {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px) saturate(190%);
+      -webkit-backdrop-filter: blur(20px) saturate(190%);
+      border: 1px solid var(--border-main);
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), var(--card-shadow);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                  box-shadow 0.25s ease, 
+                  border-color 0.25s ease;
+    }
+    .liquid-glass:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .liquid-glass-subtle {
+      background: var(--bg-card-subtle);
+      backdrop-filter: blur(14px) saturate(170%);
+      -webkit-backdrop-filter: blur(14px) saturate(170%);
+      border: 1px solid var(--border-subtle);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.25s ease;
+    }
+
+    /* LIQUID GLASS BUTTONS WITH SMOOTH HOVER & PRESS */
+    .liquid-btn-primary {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(59, 130, 246, 0.8) 50%, rgba(30, 64, 175, 0.95) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.45), 0 8px 24px -4px rgba(37, 99, 235, 0.55);
+      color: #ffffff;
+      font-weight: 700;
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  box-shadow 0.22s ease, 
+                  border-color 0.22s ease;
+    }
+    .liquid-btn-primary:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 0 12px 1px rgba(59, 130, 246, 0.45), 
+                  inset 0 1px 1px 0 rgba(255, 255, 255, 0.55), 
+                  0 12px 28px -2px rgba(37, 99, 235, 0.65);
+    }
+    /* Glow strictly hugs the button's exact border-radius contour (circular, pill, or rounded rect) */
+    .liquid-btn-primary:active {
+      transform: scale(0.96) translateY(0.5px);
+      box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.85),
+                  0 0 14px 2px rgba(59, 130, 246, 0.65),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+      border-color: rgba(191, 219, 254, 0.95) !important;
+    }
+    .liquid-btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+      transform: skewX(-25deg);
+      transition: 0.75s ease;
+      pointer-events: none;
+    }
+    .liquid-btn-primary:hover::after {
+      left: 150%;
+    }
+
+    .liquid-btn-glass {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  box-shadow 0.22s ease, 
+                  border-color 0.22s ease;
+    }
+    .theme-light .liquid-btn-glass {
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+    .liquid-btn-glass:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+    /* Glow strictly hugs the button's exact border-radius contour */
+    .liquid-btn-glass:active {
+      transform: scale(0.96) translateY(0.5px);
+      box-shadow: 0 0 0 1.5px rgba(96, 165, 250, 0.75),
+                  0 0 12px 1px rgba(59, 130, 246, 0.5),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+      border-color: rgba(147, 197, 253, 0.9) !important;
+    }
+
+    /* Circle FAB Button specific glowing ring contour */
+    .liquid-btn-primary.rounded-full:active {
+      box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.85),
+                  0 0 20px 4px rgba(59, 130, 246, 0.7),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+    }
+
+    /* Navigation tabs icon-only illumination on press (no awkward bounding box) */
+    .nav-tab-btn:active .nav-tab-icon {
+      transform: scale(1.18);
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.9));
+    }
+
+    /* Ambient floating liquid refraction orbs */
+    .ambient-orb-1 {
+      position: absolute;
+      top: -30px;
+      right: -20px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.32) 0%, rgba(99, 102, 241, 0.14) 60%, transparent 80%);
+      filter: blur(40px);
+      pointer-events: none;
+      z-index: 0;
+      animation: floatOrb 8s ease-in-out infinite alternate;
+    }
+    .ambient-orb-2 {
+      position: absolute;
+      top: 45%;
+      left: -40px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.28) 0%, rgba(147, 51, 234, 0.12) 60%, transparent 80%);
+      filter: blur(45px);
+      pointer-events: none;
+      z-index: 0;
+      animation: floatOrb 10s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(14px, 18px) scale(1.08); }
+      100% { transform: translate(-12px, -14px) scale(0.92); }
+    }
+
+    /* Micro-bounce animation for navigation tabs */
+    @keyframes navBounce {
+      0% { transform: scale(0.88); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    .nav-active-bounce {
+      animation: navBounce 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Pulse animation for voice recognition */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1.15); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .listening-pulse {
+      animation: pulse-ring 1.5s infinite;
+    }
+
+    /* Phone frame for desktop preview */
+    .phone-container {
+      max-width: 440px;
+      height: min(840px, 90vh);
+      max-height: 90vh;
+      border-radius: 44px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 12px #18181b, 0 0 0 14px #09090b;
+      transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .theme-light .phone-container {
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.15), 0 0 0 12px #cbd5e1, 0 0 0 14px #94a3b8;
+    }
+
+    /* Content pane and screen container flex constraints */
+    #content-wrapper {
+      flex: 1 1 0%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    #screen-container {
+      flex: 1 1 0%;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    /* DESKTOP VIEW MODE STYLING */
+    .view-mode-desktop .phone-container {
+      max-width: 1360px !important;
+      width: 96% !important;
+      height: 92vh !important;
+      max-height: 92vh !important;
+      border-radius: 28px !important;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--border-main) !important;
+      flex-direction: row !important;
+    }
+    .theme-light.view-mode-desktop .phone-container {
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.85) !important;
+    }
+
+    /* Pinned Navigation & Visibility toggles between modes */
+    .view-mode-desktop #desktop-sidebar {
+      display: flex !important;
+    }
+    .view-mode-desktop #desktop-header-bar {
+      display: flex !important;
+    }
+    .view-mode-desktop #mobile-bottom-nav {
+      display: none !important;
+    }
+    .view-mode-desktop #mobile-header-top {
+      display: none !important;
+    }
+    .view-mode-desktop #screen-container {
+      padding-bottom: 2.5rem !important;
+      padding-top: 1.25rem !important;
+      padding-left: 2rem !important;
+      padding-right: 2rem !important;
+    }
+
+    /* MOBILE PREVIEW VIEW MODE (PINNED BOTTOM BAR AT BASE OF PHONE FRAME) */
+    .view-mode-mobile .phone-container {
+      max-width: 440px !important;
+      width: 100% !important;
+      height: min(840px, 88vh) !important;
+      max-height: 88vh !important;
+      border-radius: 44px !important;
+      flex-direction: column !important;
+      position: relative !important;
+      overflow: hidden !important;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 12px #18181b, 0 0 0 14px #09090b !important;
+    }
+    .theme-light.view-mode-mobile .phone-container {
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.15), 0 0 0 12px #cbd5e1, 0 0 0 14px #94a3b8 !important;
+    }
+
+    .view-mode-mobile #desktop-sidebar {
+      display: none !important;
+    }
+    .view-mode-mobile #desktop-header-bar {
+      display: none !important;
+    }
+    .view-mode-mobile #mobile-bottom-nav {
+      display: flex !important;
+      position: absolute !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      height: 72px !important;
+      z-index: 40 !important;
+      background: var(--nav-bg) !important;
+      backdrop-filter: blur(24px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+      border-top: 1px solid var(--nav-border) !important;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.55) !important;
+      pointer-events: auto !important;
+    }
+    .view-mode-mobile #mobile-header-top {
+      display: flex !important;
+    }
+    .view-mode-mobile #screen-container {
+      padding-bottom: 5.8rem !important;
+      padding-top: 1.25rem !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    /* PHYSICAL MOBILE DEVICE SCREENS (PINNED TO PHYSICAL VIEWPORT BOTTOM) */
+    @media (max-width: 768px) {
+      body {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .phone-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        flex-direction: column !important;
+        border: none !important;
+      }
+      .view-mode-desktop #desktop-sidebar,
+      #desktop-sidebar {
+        display: none !important;
+      }
+      .view-mode-desktop #desktop-header-bar,
+      #desktop-header-bar {
+        display: none !important;
+      }
+      .view-mode-desktop #desktop-control-bar,
+      #desktop-control-bar {
+        display: none !important;
+      }
+      .view-mode-desktop #mobile-header-top,
+      #mobile-header-top {
+        display: flex !important;
+      }
+      .view-mode-desktop #mobile-bottom-nav,
+      #mobile-bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 70px !important;
+        z-index: 50 !important;
+        border-radius: 0 !important;
+        border-top: 1px solid var(--nav-border) !important;
+        background: var(--nav-bg) !important;
+        backdrop-filter: blur(24px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.65) !important;
+        padding-bottom: env(safe-area-inset-bottom, 4px) !important;
+      }
+      .view-mode-desktop #screen-container,
+      #screen-container {
+        padding-bottom: 86px !important;
+        padding-top: env(safe-area-inset-top, 0.75rem) !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+      }
+    }
+  </style>
+</head>
+<body id="body-root" class="min-h-screen flex flex-col items-center justify-center p-0 sm:p-4">
+
+  <!-- Desktop Top Control Bar -->
+  <header id="desktop-control-bar" class="hidden sm:flex items-center justify-between w-full max-w-[1360px] mb-3 px-2 text-xs text-slate-400 transition-all duration-300">
+    <div class="flex items-center space-x-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span id="control-bar-mode-badge" class="font-bold text-[var(--text-primary)]">💻 Desktop View</span>
+      <span class="text-[11px] text-[var(--text-muted)] hidden md:inline">• Pinned Navigation (Home, History, +, Analytics, Settings)</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <!-- Toggle View Mode: Desktop View vs Mobile Preview -->
+      <button onclick="toggleViewMode()" id="view-mode-toggle-btn" class="liquid-btn-glass flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold text-blue-400 hover:text-blue-300 transition" title="Toggle between Desktop Dashboard and Mobile Phone Frame">
+        <span id="view-mode-toggle-icon">📱</span>
+        <span id="view-mode-toggle-text">Mobile Preview</span>
+      </button>
+
+      <!-- Dark/Light Quick Toggle -->
+      <button onclick="toggleTheme()" id="desktop-theme-btn" class="liquid-btn-glass flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs text-[var(--text-primary)]" title="Toggle Dark/Light Mode">
+        <span id="theme-btn-icon">🌙</span>
+        <span id="theme-btn-text" class="text-[11px] font-semibold">Dark</span>
+      </button>
+
+      <button id="quick-seed-btn" class="liquid-btn-glass px-2.5 py-1 rounded-full text-[11px] font-semibold text-blue-400 hover:text-blue-300">
+        + Demo Data
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Shell / Desktop Dashboard Device Wrapper -->
+  <main id="app-wrapper" class="phone-container w-full bg-[var(--bg-main)] text-[var(--text-primary)] flex flex-col relative overflow-hidden transition-all duration-300">
+    
+    <!-- Fluid background orbs for glass refraction -->
+    <div class="ambient-orb-1"></div>
+    <div class="ambient-orb-2"></div>
+
+
+    <!-- PINNED DESKTOP SIDEBAR (Home, History, +, Analytics, Settings) -->
+    <aside id="desktop-sidebar" class="hidden md:flex flex-col justify-between w-64 p-5 border-r border-[var(--border-main)] bg-[var(--bg-surface)]/80 backdrop-blur-2xl z-30 sticky top-0 h-full flex-shrink-0 select-none">
+      
+      <div>
+        <!-- Brand Header -->
+        <div class="flex items-center space-x-3 mb-6 px-1">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+            <span class="text-xl font-black">₹</span>
+          </div>
+          <div>
+            <h1 class="text-base font-extrabold tracking-tight text-[var(--text-primary)]">ExpensePulse</h1>
+            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Desktop Pro
+            </span>
+          </div>
+        </div>
+
+        <!-- The 5 Pinned Navigation Tabs (Home, History, +, Analytics, Settings) -->
+        <div class="space-y-1.5">
+          <!-- 1. HOME -->
+          <button onclick="switchTab('dashboard')" class="desktop-nav-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-bold transition-all text-blue-400 liquid-glass" data-tab="dashboard">
+            <svg class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="text-sm">Home</span>
+          </button>
+
+          <!-- 2. HISTORY -->
+          <button onclick="switchTab('transactions')" class="desktop-nav-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-semibold transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5" data-tab="transactions">
+            <svg class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="text-sm">History</span>
+          </button>
+
+          <!-- 3. (+) ADD TRANSACTION ACTION BUTTON -->
+          <button onclick="openQuickEntryModal()" class="w-full liquid-btn-primary flex items-center justify-center space-x-2 py-3.5 rounded-2xl text-xs font-extrabold shadow-xl shadow-blue-500/30 my-3 hover:scale-[1.02] active:scale-95 transition-all">
+            <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="text-xs">+ Add Expense</span>
+          </button>
+
+          <!-- 4. ANALYTICS -->
+          <button onclick="switchTab('analytics')" class="desktop-nav-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-semibold transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5" data-tab="analytics">
+            <svg class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span class="text-sm">Analytics</span>
+          </button>
+
+          <!-- 5. SETTINGS -->
+          <button onclick="switchTab('settings')" class="desktop-nav-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-semibold transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5" data-tab="settings">
+            <svg class="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span class="text-sm">Settings</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Profile & Status Section in Pinned Sidebar -->
+      <div class="space-y-3 pt-4 border-t border-[var(--border-subtle)]">
+        <!-- Google Account / Sync Pill -->
+        <button onclick="openGoogleAuthModal()" class="liquid-glass-subtle w-full p-2.5 rounded-2xl flex items-center space-x-2.5 text-left hover:border-blue-500/40 transition">
+          <div class="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+          </div>
+          <div class="overflow-hidden">
+            <p id="desktop-user-name" class="text-xs font-bold text-[var(--text-primary)] truncate">Viraj</p>
+            <p id="desktop-user-status" class="text-[10px] text-blue-400 font-semibold truncate">Gmail Synced</p>
+          </div>
+        </button>
+
+        <!-- CSV Export & Theme Quick Row -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportDataCSV()" class="liquid-btn-glass py-2 px-2 rounded-xl text-[11px] font-semibold text-emerald-400 flex items-center justify-center space-x-1" title="Export CSV Ledger">
+            <span>📥 CSV</span>
+          </button>
+          <button onclick="toggleTheme()" class="liquid-btn-glass py-2 px-2 rounded-xl text-[11px] font-semibold text-[var(--text-primary)] flex items-center justify-center space-x-1" title="Toggle Theme">
+            <span id="desktop-sidebar-theme-icon">🌙</span>
+            <span id="desktop-sidebar-theme-text">Theme</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT PANE -->
+    <div id="content-wrapper" class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
+      
+      <!-- DESKTOP TOP HEADER BAR (Pinned at top of content pane) -->
+      <header id="desktop-header-bar" class="hidden md:flex items-center justify-between px-8 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-main)]/60 backdrop-blur-xl z-20 select-none">
+        <div>
+          <h2 id="desktop-section-title" class="text-xl font-extrabold text-[var(--text-primary)]">Dashboard Overview</h2>
+          <p id="desktop-section-subtitle" class="text-xs text-[var(--text-secondary)]">Manage your monthly budgets, transactions & insights</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <!-- Voice & Smart NLP shortcut -->
+          <button onclick="openQuickEntryModal(true)" class="liquid-btn-glass px-3.5 py-1.5 rounded-full text-xs font-medium text-[var(--text-secondary)] hover:text-blue-400 flex items-center space-x-1.5">
+            <span>🎙️ Voice Input</span>
+          </button>
+
+          <!-- Quick Log Button -->
+          <button onclick="openQuickEntryModal(false)" class="liquid-btn-primary px-4 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 shadow-md shadow-blue-500/20">
+            <span>+ Log Transaction</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Active Tab Screens Container with Smooth Scroll -->
+      <div id="screen-container" class="flex-1 overflow-y-auto hide-scrollbar pb-28 px-4 pt-2 relative z-10 scroll-smooth">
+      
+      <!-- SCREEN 1: DASHBOARD TAB -->
+      <div id="tab-dashboard" class="tab-screen tab-active space-y-4">
+        
+        <!-- Header Profile, Title, Google Auth Badge & In-App Theme Switcher (Mobile Only) -->
+        <div id="mobile-header-top" class="flex md:hidden items-center justify-between pt-1">
+          <div>
+            <p class="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
+              <span>Welcome Back</span>
+              <span id="dash-user-name" class="font-bold text-[var(--text-primary)]"></span>
+            </p>
+            <h1 class="text-xl font-bold tracking-tight text-[var(--text-primary)] flex items-center gap-1.5">
+              ExpensePulse <span class="text-blue-500 text-sm">✦</span>
+            </h1>
+          </div>
+          
+          <div class="flex items-center space-x-2">
+            <!-- Google Sign-in / Synced Pill -->
+            <button onclick="openGoogleAuthModal()" id="header-google-btn" class="liquid-btn-glass px-2.5 py-1.5 rounded-full flex items-center space-x-1.5 text-xs" title="Google Account & Cloud Backup">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span id="header-google-label" class="font-semibold text-[10px] text-[var(--text-primary)]">Gmail Sync</span>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="liquid-btn-glass w-8 h-8 rounded-full flex items-center justify-center text-sm" title="Toggle Theme">
+              <span id="mobile-theme-icon">🌙</span>
+            </button>
+
+            <!-- Log Quick Button -->
+            <button onclick="openQuickEntryModal()" class="liquid-btn-primary px-3 py-1.5 rounded-full flex items-center space-x-1.5 text-xs">
+              <svg class="w-3.5 h-3.5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Log</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Responsive Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
+          
+          <!-- LEFT COLUMN: Budget Hero, Custom Category Budgets & Quick Summary -->
+          <div class="lg:col-span-7 space-y-4">
+            
+            <!-- Liquid Glass Total Monthly Budget Card -->
+            <div class="liquid-glass relative overflow-hidden rounded-3xl p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-secondary)]">Overall Monthly Budget</span>
+                    <button onclick="switchTab('settings')" class="text-[10px] font-semibold text-blue-400 hover:underline">✎ Edit Cap</button>
+                  </div>
+                  <div class="flex items-baseline space-x-2 mt-0.5">
+                    <span id="dash-total-spent" class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">₹0.00</span>
+                    <span class="text-xs text-[var(--text-secondary)]">of <span id="dash-budget-cap">₹50,000.00</span></span>
+                  </div>
+                </div>
+                <span id="dash-budget-badge" class="liquid-glass-subtle px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide text-blue-400">
+                  On Track
+                </span>
+              </div>
+
+              <!-- Progress Bar with Smooth Easing -->
+              <div class="w-full h-3 bg-[var(--bg-input)] rounded-full overflow-hidden p-0.5 border border-[var(--border-subtle)]">
+                <div id="dash-budget-progress-bar" class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400 rounded-full transition-all duration-800 ease-out shadow-lg shadow-blue-500/30" style="width: 0%"></div>
+              </div>
+
+              <div class="flex justify-between items-center mt-3 text-xs text-[var(--text-secondary)]">
+                <div>
+                  <span class="text-[10px] text-[var(--text-muted)] block">Remaining</span>
+                  <span id="dash-budget-remaining" class="font-semibold text-blue-400">₹50,000.00</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-[var(--text-muted)] block">Used</span>
+                  <span id="dash-budget-percent" class="font-semibold text-[var(--text-primary)]">0%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CUSTOM CATEGORY BUDGETS BREAKDOWN SECTION -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
+                    <span>🎯 Custom Category Budgets</span>
+                  </h3>
+                  <span class="text-[10px] text-[var(--text-muted)]">Tap any card to set or edit limit</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <button onclick="window.openEditBudgetModal('Food')" class="liquid-btn-glass text-[10px] px-2.5 py-1 rounded-full text-blue-400 font-semibold">
+                    + Quick Set
+                  </button>
+                  <button onclick="switchTab('settings')" class="text-[11px] font-semibold text-blue-400 hover:underline">
+                    All Limits →
+                  </button>
+                </div>
+              </div>
+
+              <!-- List of active category budgets -->
+              <div id="dash-category-budgets-list" class="space-y-2.5 pt-1">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <!-- Quick Summary Cards (Daily & Weekly) -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="liquid-glass rounded-2xl p-3.5 flex flex-col justify-between hover:scale-[1.02] transition">
+                <div class="flex items-center space-x-2 text-[var(--text-secondary)] mb-1">
+                  <div class="w-6 h-6 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-400">
+                    <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <span class="text-xs font-medium">Today</span>
+                </div>
+                <p id="dash-today-spent" class="text-lg font-bold text-[var(--text-primary)] mt-1">₹0.00</p>
+                <span id="dash-today-count" class="text-[10px] text-[var(--text-muted)] mt-0.5">0 transactions</span>
+              </div>
+
+              <div class="liquid-glass rounded-2xl p-3.5 flex flex-col justify-between hover:scale-[1.02] transition">
+                <div class="flex items-center space-x-2 text-[var(--text-secondary)] mb-1">
+                  <div class="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-400">
+                    <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </div>
+                  <span class="text-xs font-medium">This Week</span>
+                </div>
+                <p id="dash-week-spent" class="text-lg font-bold text-[var(--text-primary)] mt-1">₹0.00</p>
+                <span id="dash-week-count" class="text-[10px] text-[var(--text-muted)] mt-0.5">0 transactions</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: Cloud Backup, Voice & NLP, and Recent Transactions -->
+          <div class="lg:col-span-5 space-y-4">
+            
+            <!-- Google Cloud Backup Indicator Banner -->
+            <div id="dash-cloud-banner" onclick="openGoogleAuthModal()" class="liquid-glass-subtle p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
+                  <svg id="sync-spin-icon" class="w-4 h-4 fill-none stroke-current stroke-2 transition-transform duration-700" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                </div>
+                <div>
+                  <p id="cloud-banner-status" class="text-xs font-semibold text-[var(--text-primary)]">Backup to Google / Gmail</p>
+                  <p id="cloud-banner-sub" class="text-[10px] text-[var(--text-muted)]">Save and sync your expenses across devices</p>
+                </div>
+              </div>
+              <span class="liquid-btn-glass px-2.5 py-1 rounded-full text-[10px] font-bold text-blue-400 flex-shrink-0">Sync Now</span>
+            </div>
+
+            <!-- Natural Language Quick Bar Shortcut -->
+            <div onclick="openQuickEntryModal(true)" class="liquid-glass p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition hover:scale-[1.01]">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shadow-md flex-shrink-0">
+                  <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-[var(--text-primary)]">Voice & Smart NLP Input</p>
+                  <p class="text-[10px] text-[var(--text-secondary)]">Speak or type e.g. "Chai & Snacks ₹120 food"</p>
+                </div>
+              </div>
+              <span class="text-xs text-blue-400 font-medium flex-shrink-0">Try it →</span>
+            </div>
+
+            <!-- Recent Transactions List Card -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <div class="flex justify-between items-center pb-1 border-b border-[var(--border-subtle)]">
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Recent Activity</h3>
+                  <span class="text-[10px] text-[var(--text-muted)]">Latest recorded transactions</span>
+                </div>
+                <button onclick="switchTab('transactions')" class="text-xs text-blue-400 font-semibold hover:underline">View All →</button>
+              </div>
+              <div id="dash-recent-list" class="space-y-2 pt-1">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- SCREEN 2: TRANSACTIONS TAB -->
+      <div id="tab-transactions" class="tab-screen space-y-3">
+        <div class="flex justify-between items-center pt-1">
+          <h1 class="text-xl font-bold tracking-tight text-[var(--text-primary)]">All Transactions</h1>
+          <button onclick="openQuickEntryModal()" class="liquid-btn-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-base">
+            +
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
+            <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <input type="text" id="tx-search-input" placeholder="Search by note, tag, or amount..." class="liquid-glass-subtle w-full pl-10 pr-4 py-2.5 rounded-2xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500 transition">
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="flex space-x-2 overflow-x-auto hide-scrollbar py-1 text-xs">
+          <button class="cat-filter-btn liquid-btn-primary px-3 py-1.5 rounded-full whitespace-nowrap active-filter" data-cat="ALL">All</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Food">🍔 Food</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Transport">🚗 Transport</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Utilities">💡 Utilities</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Entertainment">🎬 Media</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Shopping">🛍️ Shopping</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Health">💊 Health</button>
+          <button class="cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap" data-cat="Other">📦 Other</button>
+        </div>
+
+        <!-- Transactions Full List -->
+        <div id="full-transactions-list" class="space-y-2 pt-1">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- SCREEN 3: ANALYTICS & REPORTS TAB -->
+      <div id="tab-analytics" class="tab-screen space-y-4">
+        <div class="pt-1">
+          <h1 class="text-xl font-bold tracking-tight text-[var(--text-primary)]">Analytics & Reports</h1>
+          <p class="text-xs text-[var(--text-secondary)]">Visual spending insights and breakdown</p>
+        </div>
+
+        <!-- Responsive Grid for Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
+          
+          <!-- LEFT COLUMN: Time Range + Donut + Insights -->
+          <div class="lg:col-span-5 space-y-4">
+            <!-- Time Range Selector -->
+            <div class="liquid-glass-subtle flex p-1 rounded-2xl text-xs font-semibold">
+              <button class="analytics-time-btn liquid-btn-primary flex-1 py-1.5 rounded-xl active-time" data-range="month">This Month</button>
+              <button class="analytics-time-btn flex-1 py-1.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]" data-range="week">This Week</button>
+              <button class="analytics-time-btn flex-1 py-1.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]" data-range="all">All Time</button>
+            </div>
+
+            <!-- Donut Breakdown Card -->
+            <div class="liquid-glass rounded-3xl p-4">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-3">Category Breakdown</h3>
+              
+              <div class="flex flex-col items-center">
+                <!-- Interactive SVG Donut -->
+                <div class="relative w-44 h-44 flex items-center justify-center">
+                  <svg id="donut-svg" class="w-full h-full transform -rotate-90 transition-all duration-700" viewBox="0 0 100 100">
+                    <!-- Slices rendered by JS -->
+                  </svg>
+                  <div class="absolute flex flex-col items-center text-center pointer-events-none">
+                    <span class="text-[10px] text-[var(--text-muted)] font-medium">Total</span>
+                    <span id="donut-center-total" class="text-base font-extrabold text-[var(--text-primary)]">₹0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Insights Summary Card -->
+            <div class="liquid-glass rounded-3xl p-4 border border-blue-500/30">
+              <h4 class="text-xs font-bold text-blue-400 flex items-center gap-1.5 mb-1.5">
+                <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Spending Insights
+              </h4>
+              <p id="analytics-insight-text" class="text-xs text-[var(--text-secondary)] leading-relaxed">
+                Loading your spending insights...
+              </p>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Velocity Bar Chart + Detailed Legend List -->
+          <div class="lg:col-span-7 space-y-4">
+            <!-- Velocity Bar Chart Card -->
+            <div class="liquid-glass rounded-3xl p-4">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-3">Daily Spending Velocity</h3>
+              <div id="velocity-bar-chart" class="h-32 flex items-end justify-between space-x-1 pt-4 pb-1">
+                <!-- Bars rendered by JS -->
+              </div>
+              <div class="flex justify-between text-[10px] text-[var(--text-muted)] border-t border-[var(--border-subtle)] pt-2 mt-1">
+                <span>7 Days Ago</span>
+                <span>Today</span>
+              </div>
+            </div>
+
+            <!-- Category Legend List Card -->
+            <div class="liquid-glass rounded-3xl p-4">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-3">Category Spending Breakdown</h3>
+              <div id="analytics-legend" class="w-full space-y-2">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- SCREEN 4: BUDGETS & SETTINGS TAB -->
+      <div id="tab-settings" class="tab-screen space-y-4">
+        <div class="pt-1">
+          <h1 class="text-xl font-bold tracking-tight text-[var(--text-primary)]">Settings & Cloud</h1>
+          <p class="text-xs text-[var(--text-secondary)]">Google sync, category limits, and privacy</p>
+        </div>
+
+        <!-- Responsive Grid for Settings -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-1">
+          
+          <!-- LEFT COLUMN: Budgets, Caps & Tags -->
+          <div class="space-y-4">
+            <!-- Overall Budget Cap Config -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Overall Monthly Budget Target</h3>
+              <div>
+                <label class="text-[11px] text-[var(--text-secondary)] block mb-1">Total Monthly Cap (₹)</label>
+                <div class="flex space-x-2">
+                  <input type="number" id="setting-budget-input" value="50000" min="100" step="500" onkeydown="if(event.key==='Enter') saveBudgetSetting()" class="liquid-glass-subtle flex-1 px-3.5 py-2 rounded-xl text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:border-blue-500">
+                  <button onclick="saveBudgetSetting()" class="liquid-btn-primary px-4 py-2 text-xs font-bold rounded-xl">
+                    Update Cap
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- CUSTOM CATEGORY BUDGETS MANAGER -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Custom Category Budgets</h3>
+                  <p class="text-[10px] text-[var(--text-muted)]">Set independent spending limits per category</p>
+                </div>
+                <button onclick="autoDistributeBudgets()" class="liquid-btn-glass text-[10px] px-2.5 py-1 rounded-full text-blue-400 font-semibold">
+                  Auto Balance
+                </button>
+              </div>
+
+              <div id="settings-category-budgets-grid" class="space-y-2.5 pt-1">
+                <!-- Rendered by JS -->
+              </div>
+
+              <!-- Explicit Save All Category Budgets Button -->
+              <button onclick="saveAllCategoryBudgets()" class="liquid-btn-primary w-full py-2.5 rounded-2xl text-xs font-bold shadow-md flex items-center justify-center space-x-2 mt-2">
+                <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span>Save All Category Budgets</span>
+              </button>
+            </div>
+
+            <!-- Preset Tags Manager -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Custom Tags</h3>
+              <div id="tags-manager-list" class="flex flex-wrap gap-1.5">
+                <!-- Rendered by JS -->
+              </div>
+              <div class="flex space-x-2 pt-1">
+                <input type="text" id="new-tag-input" placeholder="New tag name (e.g. #trip)" onkeydown="if(event.key==='Enter') addNewCustomTag()" class="liquid-glass-subtle flex-1 px-3 py-1.5 rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500">
+                <button onclick="addNewCustomTag()" class="liquid-btn-primary px-3 py-1.5 text-xs font-bold rounded-xl">
+                  Add Tag
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Google Auth, Theme, Backup & Restore, Reset -->
+          <div class="space-y-4">
+            <!-- GOOGLE / GMAIL LOGIN & CLOUD SYNC CARD -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-9 h-9 rounded-2xl liquid-glass-subtle flex items-center justify-center p-1.5">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 id="settings-google-account-title" class="text-xs font-bold text-[var(--text-primary)]">Google Account & Gmail</h3>
+                    <p id="settings-google-account-sub" class="text-[10px] text-[var(--text-muted)]">Not signed in • Data stored locally</p>
+                  </div>
+                </div>
+                <button onclick="openGoogleAuthModal()" id="settings-google-action-btn" class="liquid-btn-glass px-3 py-1 rounded-full text-xs font-bold text-blue-400">
+                  Sign In
+                </button>
+              </div>
+
+              <!-- Cloud sync actions grid -->
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button onclick="backupToGoogleDrive()" class="liquid-btn-primary flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl text-xs">
+                  <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Backup to Gmail</span>
+                </button>
+                <button onclick="restoreFromGoogleDrive()" class="liquid-btn-glass flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-[var(--text-primary)]">
+                  <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2 text-blue-400" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Restore Data</span>
+                </button>
+              </div>
+
+              <!-- Send Statement to Gmail -->
+              <button onclick="sendStatementToGmail()" class="liquid-btn-glass w-full py-2 px-3 rounded-xl flex items-center justify-center space-x-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2 text-red-400" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span>Email Monthly Statement to my Gmail</span>
+              </button>
+            </div>
+
+            <!-- Appearance & Theme Selector -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Appearance & Liquid Theme</h3>
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="setTheme('dark')" id="theme-select-dark" class="liquid-btn-glass flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-bold">
+                  <span>🌙 Dark Mode</span>
+                </button>
+                <button onclick="setTheme('light')" id="theme-select-light" class="liquid-btn-glass flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-bold">
+                  <span>☀️ Light Mode</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- LOCAL JSON & CSV DATA BACKUP & RESTORE -->
+            <div class="liquid-glass rounded-3xl p-4 space-y-3 shadow-sm">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                  <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold text-[var(--text-primary)]">100% Private Offline Backup</h3>
+                  <p class="text-[10px] text-[var(--text-muted)]">Export or restore full ledger file on your device</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-1.5 pt-1">
+                <button onclick="exportDataBackup()" class="liquid-btn-glass flex items-center justify-center space-x-1 py-2 px-1.5 rounded-xl text-[11px] font-semibold text-[var(--text-primary)]" title="Full JSON backup">
+                  <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2 text-blue-400 flex-shrink-0" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>JSON File</span>
+                </button>
+                <button onclick="exportDataCSV()" class="liquid-btn-glass flex items-center justify-center space-x-1 py-2 px-1.5 rounded-xl text-[11px] font-semibold text-emerald-400" title="Export Excel/Sheets CSV">
+                  <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2 flex-shrink-0" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                  <span>CSV Excel</span>
+                </button>
+                <label class="liquid-btn-glass flex items-center justify-center space-x-1 py-2 px-1.5 rounded-xl text-[11px] font-semibold text-[var(--text-primary)] cursor-pointer" title="Restore JSON backup">
+                  <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2 text-blue-400 flex-shrink-0" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Restore</span>
+                  <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataBackup(event)">
+                </label>
+              </div>
+            </div>
+
+            <!-- Reset Data Zone -->
+            <div class="pt-1">
+              <button onclick="clearAllDataWithConfirmation()" class="liquid-btn-glass w-full py-2.5 rounded-2xl text-rose-400 text-xs font-bold transition hover:border-rose-500/50">
+                Reset All Transactions & Local Storage
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    </div>
+
+    <!-- Bottom Navigation Bar with Liquid Glass Sheen (Pinned on Mobile) -->
+    <nav id="mobile-bottom-nav" class="absolute bottom-0 left-0 right-0 h-20 bg-[var(--nav-bg)] backdrop-blur-2xl border-t border-[var(--nav-border)] px-4 flex items-center justify-around z-20 shadow-2xl">
+      
+      <!-- Tab 1: Dashboard -->
+      <button onclick="switchTab('dashboard')" class="nav-tab-btn flex flex-col items-center justify-center w-12 py-1 text-blue-400" data-tab="dashboard">
+        <svg class="nav-tab-icon w-5 h-5 fill-none stroke-current stroke-2 transition-transform duration-300" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="text-[10px] font-semibold mt-1">Home</span>
+      </button>
+
+      <!-- Tab 2: Transactions -->
+      <button onclick="switchTab('transactions')" class="nav-tab-btn flex flex-col items-center justify-center w-12 py-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]" data-tab="transactions">
+        <svg class="nav-tab-icon w-5 h-5 fill-none stroke-current stroke-2 transition-transform duration-300" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="text-[10px] font-medium mt-1">History</span>
+      </button>
+
+      <!-- Center FAB: Liquid Glass Quick Entry Button -->
+      <div class="relative -top-5">
+        <button onclick="openQuickEntryModal()" class="liquid-btn-primary w-13 h-13 p-3.5 rounded-full font-bold shadow-xl shadow-blue-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center">
+          <svg class="w-6 h-6 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- Tab 3: Analytics -->
+      <button onclick="switchTab('analytics')" class="nav-tab-btn flex flex-col items-center justify-center w-12 py-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]" data-tab="analytics">
+        <svg class="nav-tab-icon w-5 h-5 fill-none stroke-current stroke-2 transition-transform duration-300" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="text-[10px] font-medium mt-1">Analytics</span>
+      </button>
+
+      <!-- Tab 4: Settings -->
+      <button onclick="switchTab('settings')" class="nav-tab-btn flex flex-col items-center justify-center w-12 py-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]" data-tab="settings">
+        <svg class="nav-tab-icon w-5 h-5 fill-none stroke-current stroke-2 transition-transform duration-300" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="text-[10px] font-medium mt-1">Settings</span>
+      </button>
+
+    </nav>
+
+    <!-- QUICK ENTRY MODAL (BOTTOM SHEET WITH SMOOTH SLIDE) -->
+    <div id="quick-entry-modal" class="smooth-modal fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+      <div class="smooth-sheet liquid-glass w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto hide-scrollbar shadow-2xl flex flex-col space-y-4">
+        
+        <!-- Modal Header & Toggle -->
+        <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
+          <div class="flex items-center space-x-2">
+            <div class="liquid-glass-subtle flex space-x-1 p-1 rounded-xl text-xs font-semibold">
+              <button id="modal-tab-nlp" onclick="switchModalMode('nlp')" class="liquid-btn-primary px-3 py-1 rounded-lg text-white font-bold">Voice / Smart</button>
+              <button id="modal-tab-form" onclick="switchModalMode('form')" class="px-3 py-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Standard Form</button>
+            </div>
+            <span id="modal-edit-badge" class="hidden liquid-glass-subtle px-2 py-0.5 rounded-full text-[10px] font-bold text-blue-400">Editing</span>
+          </div>
+          <button onclick="closeQuickEntryModal()" class="liquid-btn-glass w-7 h-7 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center text-sm font-bold">
+            ✕
+          </button>
+        </div>
+
+        <!-- MODE A: NATURAL LANGUAGE & VOICE -->
+        <div id="entry-mode-nlp" class="space-y-4">
+          
+          <div class="text-center py-1">
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">Log Hands-Free or with Natural Text</h3>
+            <p class="text-[11px] text-[var(--text-secondary)]">Speak or write in plain English—we parse it all</p>
+          </div>
+
+          <!-- Big Voice Microphone Button with Liquid Glow -->
+          <div class="flex flex-col items-center justify-center py-2">
+            <button id="voice-record-btn" onclick="toggleVoiceRecording()" class="liquid-btn-primary w-16 h-16 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/40">
+              <svg class="w-7 h-7 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+            <span id="voice-status-text" class="text-[11px] font-semibold text-[var(--text-secondary)] mt-2">Tap mic to speak</span>
+          </div>
+
+          <!-- Natural Text Input -->
+          <div>
+            <textarea id="nlp-text-input" rows="2" placeholder='e.g., "Dinner with team ₹1850 food yesterday #work"' class="liquid-glass-subtle w-full px-3.5 py-2.5 rounded-2xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500 resize-none"></textarea>
+            
+            <!-- Quick prompt chips -->
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <button onclick="insertNlpSample('Biryani lunch ₹350 food today')" class="liquid-btn-glass text-[10px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg">"Biryani ₹350 food"</button>
+              <button onclick="insertNlpSample('Ola auto ₹180 transport yesterday')" class="liquid-btn-glass text-[10px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg">"Ola ₹180 transport"</button>
+              <button onclick="insertNlpSample('Hotstar monthly ₹299 entertainment')" class="liquid-btn-glass text-[10px] px-2.5 py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg">"Hotstar ₹299 media"</button>
+            </div>
+          </div>
+
+          <!-- Parsed Result Live Preview -->
+          <div class="liquid-glass-subtle p-3 rounded-2xl space-y-2">
+            <span class="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Parsed Details</span>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-[var(--text-muted)] block text-[10px]">Amount:</span>
+                <span id="nlp-preview-amount" class="font-bold text-blue-400 text-sm">₹0.00</span>
+              </div>
+              <div>
+                <span class="text-[var(--text-muted)] block text-[10px]">Category:</span>
+                <span id="nlp-preview-cat" class="font-bold text-[var(--text-primary)]">Other</span>
+              </div>
+              <div>
+                <span class="text-[var(--text-muted)] block text-[10px]">Date:</span>
+                <span id="nlp-preview-date" class="font-medium text-[var(--text-secondary)]">Today</span>
+              </div>
+              <div>
+                <span class="text-[var(--text-muted)] block text-[10px]">Tags:</span>
+                <span id="nlp-preview-tags" class="font-medium text-[var(--text-secondary)]">None</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Receipt attachment -->
+          <div class="flex items-center justify-between pt-1">
+            <label class="flex items-center space-x-2 text-xs text-[var(--text-secondary)] hover:text-blue-400 cursor-pointer">
+              <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span id="nlp-receipt-label">Attach Receipt Photo</span>
+              <input type="file" id="nlp-receipt-file" accept="image/*" class="hidden" onchange="handleReceiptSelect(event, 'nlp')">
+            </label>
+            <div id="nlp-receipt-thumb" class="hidden relative w-8 h-8 rounded-lg overflow-hidden border border-blue-500">
+              <img id="nlp-receipt-img" src="" class="w-full h-full object-cover">
+              <button onclick="removeReceipt('nlp')" class="absolute top-0 right-0 bg-black/70 text-white text-[8px] w-3 h-3 flex items-center justify-center">✕</button>
+            </div>
+          </div>
+
+          <!-- Save Button with Liquid Sheen -->
+          <button onclick="saveNlpExpense()" class="liquid-btn-primary w-full py-3 rounded-2xl text-sm">
+            Log This Expense
+          </button>
+
+        </div>
+
+        <!-- MODE B: DETAILED MANUAL FORM -->
+        <div id="entry-mode-form" class="space-y-3.5 hidden">
+          
+          <!-- Amount Input -->
+          <div>
+            <label class="text-[11px] font-semibold text-[var(--text-secondary)] block mb-1">Amount (₹)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center font-bold text-blue-400 text-lg">₹</span>
+              <input type="number" id="form-amount" step="1" placeholder="0.00" class="liquid-glass-subtle w-full pl-8 pr-4 py-2.5 rounded-2xl text-lg font-bold text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500">
+            </div>
+          </div>
+
+          <!-- Category Selection -->
+          <div>
+            <label class="text-[11px] font-semibold text-[var(--text-secondary)] block mb-1.5">Category</label>
+            <div id="form-category-grid" class="grid grid-cols-4 gap-1.5 text-[11px] font-medium">
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Food">🍔 Food</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Transport">🚗 Transport</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Utilities">💡 Utilities</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Entertainment">🎬 Media</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Shopping">🛍️ Shop</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Health">💊 Health</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Travel">✈️ Travel</button>
+              <button type="button" class="form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]" data-cat="Other">📦 Other</button>
+            </div>
+          </div>
+
+          <!-- Description / Notes -->
+          <div>
+            <label class="text-[11px] font-semibold text-[var(--text-secondary)] block mb-1">Description / Notes</label>
+            <input type="text" id="form-note" placeholder="What was this for?" class="liquid-glass-subtle w-full px-3.5 py-2 rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500">
+          </div>
+
+          <!-- Date & Tags in 2 Columns -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] font-semibold text-[var(--text-secondary)] block mb-1">Date</label>
+              <input type="date" id="form-date" class="liquid-glass-subtle w-full px-2.5 py-2 rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-[var(--text-secondary)] block mb-1">Tags</label>
+              <input type="text" id="form-tags" placeholder="#work, #trip" class="liquid-glass-subtle w-full px-2.5 py-2 rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500">
+            </div>
+          </div>
+
+          <!-- Receipt Capture / Upload -->
+          <div>
+            <label class="text-[11px] font-semibold text-[var(--text-secondary)] block mb-1">Receipt Attachment</label>
+            <div class="flex items-center space-x-2">
+              <label class="liquid-glass-subtle flex-1 flex items-center justify-center space-x-2 py-2.5 px-3 border border-dashed border-blue-500/40 rounded-xl text-xs text-[var(--text-secondary)] cursor-pointer hover:border-blue-400 transition">
+                <svg class="w-4 h-4 fill-none stroke-current stroke-2 text-blue-400" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span id="form-receipt-label">Take Photo / Upload Bill</span>
+                <input type="file" id="form-receipt-file" accept="image/*" class="hidden" onchange="handleReceiptSelect(event, 'form')">
+              </label>
+              
+              <div id="form-receipt-thumb" class="hidden relative w-10 h-10 rounded-xl overflow-hidden border border-blue-500 flex-shrink-0">
+                <img id="form-receipt-img" src="" class="w-full h-full object-cover">
+                <button onclick="removeReceipt('form')" class="absolute top-0 right-0 bg-black/80 text-white text-[9px] w-4 h-4 flex items-center justify-center">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button id="form-save-btn" onclick="saveManualExpense()" class="liquid-btn-primary w-full py-3 rounded-2xl text-sm mt-2">
+            Save Expense
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GOOGLE ACCOUNT & GMAIL AUTH MODAL (SMOOTH DIALOG) -->
+    <div id="google-auth-modal" class="smooth-modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="smooth-dialog liquid-glass w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b border-[var(--border-subtle)] pb-3">
+          <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">Google Cloud Account</h3>
+          </div>
+          <button onclick="closeGoogleAuthModal()" class="liquid-btn-glass w-7 h-7 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center text-sm font-bold">✕</button>
+        </div>
+
+        <!-- If Logged In View -->
+        <div id="google-profile-view" class="space-y-4 hidden">
+          <div class="flex items-center space-x-3 p-3 liquid-glass-subtle rounded-2xl">
+            <div id="user-avatar-circle" class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center text-base border-2 border-white/40 shadow-md">
+              V
+            </div>
+            <div class="overflow-hidden">
+              <h4 id="user-display-name" class="text-sm font-bold text-[var(--text-primary)] truncate">Viraj Patel</h4>
+              <p id="user-email-text" class="text-xs text-[var(--text-muted)] truncate">viraj@gmail.com</p>
+              <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-semibold mt-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Google Cloud Connected
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs py-1 border-b border-[var(--border-subtle)]">
+              <span class="text-[var(--text-muted)]">Last Gmail Backup:</span>
+              <span id="google-last-sync-time" class="font-semibold text-[var(--text-primary)]">Never</span>
+            </div>
+            <div class="flex justify-between text-xs py-1 border-b border-[var(--border-subtle)]">
+              <span class="text-[var(--text-muted)]">Cloud Storage:</span>
+              <span class="font-semibold text-blue-400">Google Drive AppData</span>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-2">
+            <button onclick="backupToGoogleDrive()" class="liquid-btn-primary w-full py-2.5 rounded-xl text-xs">
+              ⚡ Backup Now to Google Drive
+            </button>
+            <button onclick="restoreFromGoogleDrive()" class="liquid-btn-glass w-full py-2.5 rounded-xl text-xs font-semibold text-[var(--text-primary)]">
+              📥 Restore from Google Cloud
+            </button>
+            <button onclick="logoutGoogleAccount()" class="liquid-btn-glass w-full py-2.5 rounded-xl text-xs font-bold text-rose-400">
+              Sign Out from Google
+            </button>
+          </div>
+        </div>
+
+        <!-- If NOT Logged In View -->
+        <div id="google-login-view" class="space-y-4 text-center py-2">
+          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Sign in with your Google account to automatically back up your expenses, receipts, and custom budgets to your private Google cloud storage.
+          </p>
+
+          <div class="space-y-2 text-left">
+            <label class="text-[11px] font-semibold text-[var(--text-secondary)] block">Enter your Gmail Address</label>
+            <input type="email" id="login-gmail-input" placeholder="e.g. viraj@gmail.com" value="viraj@gmail.com" onkeydown="if(event.key==='Enter') loginWithGoogle()" class="liquid-glass-subtle w-full px-3.5 py-2.5 rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-blue-500">
+          </div>
+
+          <button onclick="loginWithGoogle()" class="liquid-btn-glass w-full py-3 px-4 rounded-2xl flex items-center justify-center space-x-2.5 shadow-md">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span class="text-xs font-bold text-[var(--text-primary)]">Continue with Google</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- EDIT CATEGORY BUDGET MODAL (SMOOTH DIALOG) -->
+    <div id="edit-budget-modal" class="smooth-modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="smooth-dialog liquid-glass w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-[var(--border-subtle)] pb-2.5">
+          <div class="flex items-center space-x-2.5">
+            <span id="edit-budget-cat-icon" class="text-2xl">🍔</span>
+            <div>
+              <h3 id="edit-budget-cat-name" class="text-sm font-bold text-[var(--text-primary)]">Food & Dining</h3>
+              <p class="text-[10px] text-[var(--text-muted)]">Set custom monthly budget limit</p>
+            </div>
+          </div>
+          <button onclick="closeEditBudgetModal()" class="liquid-btn-glass w-7 h-7 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center text-sm font-bold">✕</button>
+        </div>
+
+        <!-- Current Spent Status -->
+        <div class="liquid-glass-subtle p-3 rounded-2xl flex justify-between items-center text-xs">
+          <span class="text-[var(--text-secondary)]">Spent this month:</span>
+          <span id="edit-budget-cat-spent" class="font-bold text-blue-400">₹0.00</span>
+        </div>
+
+        <!-- Big Input with INR symbol -->
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-semibold text-[var(--text-secondary)] block">Monthly Budget Limit (₹)</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-3.5 text-blue-400 font-bold text-base">₹</span>
+            <input type="number" id="edit-budget-input" min="0" step="500" placeholder="0" class="liquid-glass-subtle w-full pl-9 pr-3.5 py-3 rounded-2xl text-lg font-extrabold text-[var(--text-primary)] focus:outline-none focus:border-blue-500 transition" oninput="syncEditBudgetSlider(this.value)">
+          </div>
+        </div>
+
+        <!-- Stepper Buttons -->
+        <div class="grid grid-cols-4 gap-1.5">
+          <button type="button" onclick="adjustEditBudget(-1000)" class="liquid-btn-glass py-1.5 rounded-xl text-[10px] font-bold text-[var(--text-secondary)] hover:text-white">-₹1,000</button>
+          <button type="button" onclick="adjustEditBudget(-500)" class="liquid-btn-glass py-1.5 rounded-xl text-[10px] font-bold text-[var(--text-secondary)] hover:text-white">-₹500</button>
+          <button type="button" onclick="adjustEditBudget(500)" class="liquid-btn-glass py-1.5 rounded-xl text-[10px] font-bold text-blue-400 hover:text-white">+₹500</button>
+          <button type="button" onclick="adjustEditBudget(1000)" class="liquid-btn-glass py-1.5 rounded-xl text-[10px] font-bold text-blue-400 hover:text-white">+₹1,000</button>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="space-y-1.5">
+          <span class="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider block">Quick Presets</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="setEditBudgetPreset(2000)" class="liquid-btn-glass px-2.5 py-1 rounded-xl text-[10px] font-semibold hover:border-blue-500/50">₹2,000</button>
+            <button type="button" onclick="setEditBudgetPreset(5000)" class="liquid-btn-glass px-2.5 py-1 rounded-xl text-[10px] font-semibold hover:border-blue-500/50">₹5,000</button>
+            <button type="button" onclick="setEditBudgetPreset(10000)" class="liquid-btn-glass px-2.5 py-1 rounded-xl text-[10px] font-semibold hover:border-blue-500/50">₹10,000</button>
+            <button type="button" onclick="setEditBudgetPreset(15000)" class="liquid-btn-glass px-2.5 py-1 rounded-xl text-[10px] font-semibold hover:border-blue-500/50">₹15,000</button>
+            <button type="button" onclick="setEditBudgetPreset(20000)" class="liquid-btn-glass px-2.5 py-1 rounded-xl text-[10px] font-semibold hover:border-blue-500/50">₹20,000</button>
+            <button type="button" onclick="setEditBudgetPreset(0)" class="liquid-btn-glass px-2.5 py-1 rounded-xl text-[10px] font-semibold text-zinc-400 hover:text-rose-400">No Limit (₹0)</button>
+          </div>
+        </div>
+
+        <!-- Visual Range Slider -->
+        <div class="space-y-1 pt-1">
+          <div class="flex justify-between text-[10px] text-[var(--text-muted)]">
+            <span>₹0</span>
+            <span>₹50,000+</span>
+          </div>
+          <input type="range" id="edit-budget-slider" min="0" max="50000" step="500" class="w-full accent-blue-500 cursor-pointer" oninput="syncEditBudgetInput(this.value)">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-2 pt-2">
+          <button onclick="saveCategoryBudgetLimit()" class="liquid-btn-primary w-full py-3 rounded-2xl text-xs font-bold shadow-lg flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save Budget Limit</span>
+          </button>
+          <button onclick="closeEditBudgetModal()" class="liquid-btn-glass w-full py-2 rounded-xl text-[var(--text-secondary)] text-xs font-semibold">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTION DETAIL & RECEIPT MODAL (SMOOTH DIALOG) -->
+    <div id="tx-detail-modal" class="smooth-modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="smooth-dialog liquid-glass w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b border-[var(--border-subtle)] pb-2.5">
+          <h3 class="text-sm font-bold text-[var(--text-primary)]">Transaction Details</h3>
+          <button onclick="closeTxDetailModal()" class="liquid-btn-glass w-7 h-7 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center text-sm font-bold">✕</button>
+        </div>
+
+        <div class="text-center py-2">
+          <span id="detail-category-badge" class="liquid-glass-subtle px-2.5 py-1 rounded-full text-xs font-bold text-[var(--text-primary)]">Category</span>
+          <h2 id="detail-amount" class="text-3xl font-extrabold text-[var(--text-primary)] mt-2">₹0.00</h2>
+          <p id="detail-note" class="text-sm text-[var(--text-secondary)] font-medium mt-1">Description</p>
+          <p id="detail-date" class="text-xs text-[var(--text-muted)] mt-0.5">Date</p>
+        </div>
+
+        <!-- Tags -->
+        <div id="detail-tags-container" class="flex flex-wrap justify-center gap-1.5 pt-1">
+          <!-- Chips -->
+        </div>
+
+        <!-- Attached Receipt Image View -->
+        <div id="detail-receipt-box" class="hidden">
+          <span class="text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider block mb-1 text-center">Attached Receipt</span>
+          <div class="max-h-48 rounded-2xl overflow-hidden border border-[var(--border-main)] bg-black/50 flex items-center justify-center">
+            <img id="detail-receipt-img" src="" alt="Receipt" class="max-h-48 w-auto object-contain cursor-zoom-in hover:scale-105 transition duration-300" onclick="openFullscreenReceipt(this.src)">
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2">
+          <div class="flex space-x-2">
+            <button id="detail-edit-btn" onclick="editCurrentTransaction()" class="liquid-btn-primary flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md">
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>Edit Expense</span>
+            </button>
+            <button id="detail-delete-btn" class="liquid-btn-glass flex-1 py-2 rounded-xl text-rose-400 text-xs font-bold transition hover:border-rose-500/40 flex items-center justify-center space-x-1.5">
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Delete</span>
+            </button>
+          </div>
+          <button onclick="closeTxDetailModal()" class="liquid-btn-glass w-full py-2 rounded-xl text-[var(--text-secondary)] text-xs font-semibold transition">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULLSCREEN RECEIPT VIEWER MODAL (SMOOTH FADE & ZOOM) -->
+    <div id="receipt-fullscreen-modal" class="smooth-modal fixed inset-0 bg-black/95 z-50 flex flex-col p-4 hidden items-center justify-center cursor-pointer" onclick="closeFullscreenReceipt()">
+      <div class="absolute top-4 right-4 text-white text-xl font-bold bg-zinc-800 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition">✕</div>
+      <img id="fullscreen-receipt-img" src="" class="smooth-fullscreen-img max-w-full max-h-[85vh] object-contain rounded-lg">
+      <span class="text-slate-400 text-xs mt-3">Tap anywhere to close</span>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT APPLICATION ENGINE -->
+  <script>
+    // --- STATE MANAGEMENT & LOCAL STORAGE ---
+    var STORAGE_KEY = 'EXPENSE_TRACKER_DATA_V5';
+    var GOOGLE_CLOUD_KEY = 'EXPENSE_TRACKER_GCLOUD_DATA';
+    
+    var appState = {
+      budgetCap: 50000,
+      theme: 'dark',
+      categoryBudgets: {
+        Food: 15000,
+        Transport: 6000,
+        Utilities: 5000,
+        Entertainment: 4000,
+        Shopping: 10000,
+        Health: 4000,
+        Travel: 4000,
+        Other: 2000
+      },
+      transactions: [],
+      customTags: ['#work', '#vacation', '#groceries', '#bills', '#personal'],
+      currentTab: 'dashboard',
+      activeFilter: 'ALL',
+      activeTimeRange: 'month',
+      user: null
+    };
+
+    var CATEGORIES = {
+      Food: { name: 'Food & Dining', icon: '🍔', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.2)' },
+      Transport: { name: 'Transportation', icon: '🚗', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.2)' },
+      Utilities: { name: 'Utilities & Bills', icon: '💡', color: '#10b981', bg: 'rgba(16, 185, 129, 0.2)' },
+      Entertainment: { name: 'Entertainment', icon: '🎬', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.2)' },
+      Shopping: { name: 'Shopping', icon: '🛍️', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)' },
+      Health: { name: 'Health & Medical', icon: '💊', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.2)' },
+      Travel: { name: 'Travel', icon: '✈️', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.2)' },
+      Other: { name: 'Other', icon: '📦', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.2)' }
+    };
+
+    function formatINR(num) {
+      if (typeof num !== 'number' || isNaN(num)) num = 0;
+      return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function getLocalDateString(d) {
+      if (!d) d = new Date();
+      if (typeof d === 'string') d = new Date(d);
+      var year = d.getFullYear();
+      var month = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return year + '-' + month + '-' + day;
+    }
+
+    function getLocalMonthString(d) {
+      if (!d) d = new Date();
+      if (typeof d === 'string') d = new Date(d);
+      var year = d.getFullYear();
+      var month = String(d.getMonth() + 1).padStart(2, '0');
+      return year + '-' + month;
+    }
+
+    // --- SMOOTH MODAL HELPERS ---
+    function openModalElement(modalId) {
+      var modal = document.getElementById(modalId);
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          modal.classList.add('modal-active');
+        });
+      });
+    }
+
+    function closeModalElement(modalId, callback) {
+      var modal = document.getElementById(modalId);
+      if (!modal) return;
+      modal.classList.remove('modal-active');
+      setTimeout(function() {
+        if (!modal.classList.contains('modal-active')) {
+          modal.classList.add('hidden');
+          if (callback) callback();
+        }
+      }, 340);
+    }
+
+    // Centralized backdrop click-to-close on all modal overlays
+    document.querySelectorAll('.smooth-modal').forEach(function(modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          if (modal.id === 'quick-entry-modal') window.closeQuickEntryModal();
+          else if (modal.id === 'google-auth-modal') window.closeGoogleAuthModal();
+          else if (modal.id === 'edit-budget-modal') window.closeEditBudgetModal();
+          else if (modal.id === 'tx-detail-modal') window.closeTxDetailModal();
+          else if (modal.id === 'receipt-fullscreen-modal') window.closeFullscreenReceipt();
+          else closeModalElement(modal.id);
+        }
+      });
+    });
+
+    // Escape key closes any active modal
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var activeModal = document.querySelector('.smooth-modal.modal-active');
+        if (activeModal) {
+          if (activeModal.id === 'quick-entry-modal') window.closeQuickEntryModal();
+          else if (activeModal.id === 'google-auth-modal') window.closeGoogleAuthModal();
+          else if (activeModal.id === 'edit-budget-modal') window.closeEditBudgetModal();
+          else if (activeModal.id === 'tx-detail-modal') window.closeTxDetailModal();
+          else if (activeModal.id === 'receipt-fullscreen-modal') window.closeFullscreenReceipt();
+          else closeModalElement(activeModal.id);
+        }
+      }
+    });
+
+    // --- GOOGLE / GMAIL CLOUD ENGINE ---
+    window.openGoogleAuthModal = function() {
+      renderGoogleAuthModal();
+      openModalElement('google-auth-modal');
+    };
+
+    window.closeGoogleAuthModal = function() {
+      closeModalElement('google-auth-modal');
+    };
+
+    function renderGoogleAuthModal() {
+      var loginView = document.getElementById('google-login-view');
+      var profileView = document.getElementById('google-profile-view');
+      
+      if (appState.user && appState.user.email) {
+        if (loginView) loginView.classList.add('hidden');
+        if (profileView) profileView.classList.remove('hidden');
+
+        var nameEl = document.getElementById('user-display-name');
+        var emailEl = document.getElementById('user-email-text');
+        var avatarEl = document.getElementById('user-avatar-circle');
+        var lastSyncEl = document.getElementById('google-last-sync-time');
+
+        if (nameEl) nameEl.innerText = appState.user.name || 'Google User';
+        if (emailEl) emailEl.innerText = appState.user.email;
+        if (avatarEl) avatarEl.innerText = (appState.user.name || 'U').charAt(0).toUpperCase();
+        if (lastSyncEl) lastSyncEl.innerText = appState.user.lastSync ? new Date(appState.user.lastSync).toLocaleString('en-IN') : 'Just now';
+      } else {
+        if (loginView) loginView.classList.remove('hidden');
+        if (profileView) profileView.classList.add('hidden');
+      }
+    }
+
+    window.loginWithGoogle = function() {
+      var input = document.getElementById('login-gmail-input');
+      var email = (input && input.value.trim()) || 'viraj@gmail.com';
+      if (!email || email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+        showNotification("Please enter a valid email address.", "error");
+        return;
+      }
+
+      var username = email.split('@')[0];
+      var displayName = username.charAt(0).toUpperCase() + username.slice(1);
+
+      appState.user = {
+        email: email,
+        name: displayName,
+        lastSync: Date.now()
+      };
+
+      saveState();
+      window.backupToGoogleDrive(false);
+      renderGoogleAuthModal();
+      showNotification("Signed in as " + email + " ✦ Cloud Sync Active");
+    };
+
+    window.logoutGoogleAccount = function() {
+      appState.user = null;
+      saveState();
+      renderGoogleAuthModal();
+      showNotification("Signed out from Google Account");
+    };
+
+    window.backupToGoogleDrive = function(showToast) {
+      if (showToast === undefined) showToast = true;
+      if (!appState.user) {
+        window.openGoogleAuthModal();
+        return;
+      }
+
+      var icon = document.getElementById('sync-spin-icon');
+      if (icon) {
+        icon.classList.add('rotate-180');
+        setTimeout(function() { icon.classList.remove('rotate-180'); }, 700);
+      }
+
+      var syncPayload = {
+        email: appState.user.email,
+        backupDate: new Date().toISOString(),
+        transactions: appState.transactions,
+        categoryBudgets: appState.categoryBudgets,
+        budgetCap: appState.budgetCap,
+        customTags: appState.customTags
+      };
+
+      try {
+        localStorage.setItem(GOOGLE_CLOUD_KEY + '_' + appState.user.email, JSON.stringify(syncPayload));
+        appState.user.lastSync = Date.now();
+        saveState();
+        if (showToast) {
+          showNotification("✓ Data backed up to Google Cloud (" + appState.user.email + ")");
+        }
+      } catch (err) {
+        showNotification("Failed to save to cloud storage: " + err, "error");
+      }
+    };
+
+    window.restoreFromGoogleDrive = function() {
+      if (!appState.user) {
+        window.openGoogleAuthModal();
+        return;
+      }
+
+      try {
+        var cloudData = localStorage.getItem(GOOGLE_CLOUD_KEY + '_' + appState.user.email);
+        if (cloudData) {
+          var parsed = JSON.parse(cloudData);
+          if (parsed && Array.isArray(parsed.transactions)) {
+            appState.transactions = parsed.transactions;
+            if (parsed.categoryBudgets) appState.categoryBudgets = parsed.categoryBudgets;
+            if (parsed.budgetCap) appState.budgetCap = parsed.budgetCap;
+            if (parsed.customTags) appState.customTags = parsed.customTags;
+            saveState();
+            window.closeGoogleAuthModal();
+            showNotification("✓ Restored " + parsed.transactions.length + " transactions from " + appState.user.email);
+          }
+        } else {
+          showNotification("No cloud backup found for " + appState.user.email + ". Backup current data first!", "info");
+        }
+      } catch (e) {
+        showNotification("Error restoring from Google: " + e, "error");
+      }
+    };
+
+    window.sendStatementToGmail = function() {
+      var email = (appState.user && appState.user.email) || 'viraj@gmail.com';
+      var total = appState.transactions.reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+      var count = appState.transactions.length;
+
+      var subject = encodeURIComponent("ExpensePulse Monthly Statement - " + new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }));
+      var body = encodeURIComponent(
+        "Hi " + ((appState.user && appState.user.name) || "there") + ",\n\n" +
+        "Here is your ExpensePulse Statement:\n" +
+        "- Total Recorded Expenses: ₹" + formatINR(total) + "\n" +
+        "- Total Transactions: " + count + "\n" +
+        "- Monthly Budget Cap: ₹" + formatINR(appState.budgetCap) + "\n\n" +
+        "Recent entries:\n" +
+        appState.transactions.slice(0, 5).map(function(t) { return "• " + (t.date || '') + " | " + t.category + ": ₹" + formatINR(parseFloat(t.amount) || 0) + " (" + (t.note || '') + ")"; }).join("\n") +
+        "\n\nExported securely from ExpensePulse Mobile."
+      );
+
+      window.open("mailto:" + email + "?subject=" + subject + "&body=" + body);
+      showNotification("Opening Gmail statement draft...");
+    };
+
+    // --- THEME ENGINE ---
+    window.applyTheme = function(theme) {
+      var root = document.getElementById('body-root');
+      var isLight = theme === 'light';
+      
+      if (isLight) {
+        root.classList.add('theme-light');
+      } else {
+        root.classList.remove('theme-light');
+      }
+
+      var desktopIcon = document.getElementById('theme-btn-icon');
+      var desktopText = document.getElementById('theme-btn-text');
+      var mobileIcon = document.getElementById('mobile-theme-icon');
+      var sidebarIcon = document.getElementById('desktop-sidebar-theme-icon');
+      var sidebarText = document.getElementById('desktop-sidebar-theme-text');
+
+      if (desktopIcon) desktopIcon.innerText = isLight ? '☀️' : '🌙';
+      if (desktopText) desktopText.innerText = isLight ? 'Light' : 'Dark';
+      if (mobileIcon) mobileIcon.innerText = isLight ? '☀️' : '🌙';
+      if (sidebarIcon) sidebarIcon.innerText = isLight ? '☀️' : '🌙';
+      if (sidebarText) sidebarText.innerText = isLight ? 'Light' : 'Dark';
+
+      var darkBtn = document.getElementById('theme-select-dark');
+      var lightBtn = document.getElementById('theme-select-light');
+      if (darkBtn && lightBtn) {
+        if (isLight) {
+          lightBtn.className = "liquid-btn-primary flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-bold transition";
+          darkBtn.className = "liquid-btn-glass flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-semibold text-[var(--text-secondary)] transition";
+        } else {
+          darkBtn.className = "liquid-btn-primary flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-bold transition";
+          lightBtn.className = "liquid-btn-glass flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-semibold text-[var(--text-secondary)] transition";
+        }
+      }
+
+      renderAnalytics();
+    };
+
+    window.toggleTheme = function() {
+      var newTheme = appState.theme === 'dark' ? 'light' : 'dark';
+      window.setTheme(newTheme);
+    };
+
+    window.setTheme = function(theme) {
+      appState.theme = theme;
+      saveState();
+      window.applyTheme(theme);
+      showNotification("Switched to " + (theme === 'dark' ? 'Liquid Dark 🌙' : 'Liquid Light ☀️'));
+    };
+
+    function loadState() {
+      try {
+        var data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          var parsed = JSON.parse(data);
+          appState = Object.assign(appState, parsed);
+          if (!appState.categoryBudgets) {
+            appState.categoryBudgets = {
+              Food: 15000,
+              Transport: 6000,
+              Utilities: 5000,
+              Entertainment: 4000,
+              Shopping: 10000,
+              Health: 4000,
+              Travel: 4000,
+              Other: 2000
+            };
+          } else {
+            Object.keys(CATEGORIES).forEach(function(c) {
+              if (appState.categoryBudgets[c] === undefined) appState.categoryBudgets[c] = 0;
+            });
+          }
+        } else {
+          seedSampleData(false);
+        }
+      } catch (err) {
+        console.error("Failed to load local storage:", err);
+      }
+      window.applyTheme(appState.theme || 'dark');
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        renderAll();
+      } catch (err) {
+        console.error("Failed to save to local storage:", err);
+        if (err && (err.name === 'QuotaExceededError' || err.code === 22 || err.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+          showNotification("Storage quota reached! Export your ledger or delete older receipts.", "error");
+        } else {
+          showNotification("Storage error: unable to save data locally.", "error");
+        }
+      }
+    }
+
+    // --- SEED SAMPLE DATA ---
+    window.seedSampleData = function(notify) {
+      var today = new Date();
+      var formatDt = function(offsetDays) {
+        var d = new Date(today);
+        d.setDate(d.getDate() - offsetDays);
+        return getLocalDateString(d);
+      };
+
+      appState.budgetCap = 50000;
+      appState.categoryBudgets = {
+        Food: 15000,
+        Transport: 6000,
+        Utilities: 5000,
+        Entertainment: 4000,
+        Shopping: 10000,
+        Health: 4000,
+        Travel: 4000,
+        Other: 2000
+      };
+
+      appState.transactions = [
+        {
+          id: 'tx-' + Date.now() + '-1',
+          amount: 1450.00,
+          category: 'Food',
+          note: 'Dinner with colleagues at Trattoria',
+          date: formatDt(0),
+          tags: ['#work', '#team'],
+          receipt: null
+        },
+        {
+          id: 'tx-' + Date.now() + '-2',
+          amount: 380.00,
+          category: 'Transport',
+          note: 'Ola cab from metro station',
+          date: formatDt(1),
+          tags: ['#personal'],
+          receipt: null
+        },
+        {
+          id: 'tx-' + Date.now() + '-3',
+          amount: 1199.00,
+          category: 'Utilities',
+          note: 'Fiber Broadband Internet bill',
+          date: formatDt(2),
+          tags: ['#bills'],
+          receipt: null
+        },
+        {
+          id: 'tx-' + Date.now() + '-4',
+          amount: 2850.00,
+          category: 'Shopping',
+          note: 'Weekly grocery store run',
+          date: formatDt(3),
+          tags: ['#groceries'],
+          receipt: null
+        },
+        {
+          id: 'tx-' + Date.now() + '-5',
+          amount: 699.00,
+          category: 'Entertainment',
+          note: 'Hotstar and Spotify subscriptions',
+          date: formatDt(4),
+          tags: ['#bills'],
+          receipt: null
+        },
+        {
+          id: 'tx-' + Date.now() + '-6',
+          amount: 850.00,
+          category: 'Health',
+          note: 'Pharmacy vitamins & checkup',
+          date: formatDt(5),
+          tags: ['#health'],
+          receipt: null
+        }
+      ];
+      saveState();
+      if (notify) showNotification("Sample transactions & budgets loaded successfully! ⚡");
+    };
+
+    // --- SMOOTH TAB NAVIGATION (PINNED CONTROLS: Home, History, +, Analytics, Settings) ---
+    window.switchTab = function(tabId) {
+      var currentScreenEl = document.getElementById('tab-' + tabId);
+      if (appState.currentTab === tabId && currentScreenEl && currentScreenEl.classList.contains('tab-active')) return;
+      appState.currentTab = tabId;
+      
+      var screens = ['dashboard', 'transactions', 'analytics', 'settings'];
+      screens.forEach(function(s) {
+        var el = document.getElementById('tab-' + s);
+        if (el) {
+          if (s === tabId) {
+            el.classList.add('tab-active');
+          } else {
+            el.classList.remove('tab-active');
+          }
+        }
+      });
+
+      // Update mobile pinned bottom nav items
+      document.querySelectorAll('.nav-tab-btn').forEach(function(btn) {
+        var isTarget = btn.getAttribute('data-tab') === tabId;
+        var icon = btn.querySelector('.nav-tab-icon');
+        if (isTarget) {
+          btn.classList.add('text-blue-400');
+          btn.classList.remove('text-[var(--text-muted)]');
+          if (icon) {
+            icon.classList.add('nav-active-bounce');
+            setTimeout(function() { icon.classList.remove('nav-active-bounce'); }, 400);
+          }
+        } else {
+          btn.classList.remove('text-blue-400');
+          btn.classList.add('text-[var(--text-muted)]');
+        }
+      });
+
+      // Update desktop pinned sidebar items
+      document.querySelectorAll('.desktop-nav-btn').forEach(function(btn) {
+        var isTarget = btn.getAttribute('data-tab') === tabId;
+        if (isTarget) {
+          btn.className = "desktop-nav-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-bold transition-all text-blue-400 liquid-glass";
+        } else {
+          btn.className = "desktop-nav-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-semibold transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5";
+        }
+      });
+
+      // Update desktop top header title & subtitle dynamically
+      var titleMap = {
+        dashboard: { title: "Dashboard Overview", sub: "Manage your monthly budgets, transactions & insights" },
+        transactions: { title: "Transactions History", sub: "Filter, search, view receipts and export records" },
+        analytics: { title: "Analytics & Reports", sub: "Visual spending distribution and category trends" },
+        settings: { title: "Settings & Cloud", sub: "Category budgets, cloud backup and app preferences" }
+      };
+      var info = titleMap[tabId] || titleMap.dashboard;
+      var titleEl = document.getElementById('desktop-section-title');
+      var subEl = document.getElementById('desktop-section-subtitle');
+      if (titleEl) titleEl.innerText = info.title;
+      if (subEl) subEl.innerText = info.sub;
+
+      var container = document.getElementById('screen-container');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      renderAll();
+    };
+
+    // --- DESKTOP & MOBILE VIEW CONTROLLER ---
+    window.setViewMode = function(mode) {
+      appState.viewMode = mode;
+      saveState();
+      var root = document.getElementById('body-root');
+      var toggleIcon = document.getElementById('view-mode-toggle-icon');
+      var toggleText = document.getElementById('view-mode-toggle-text');
+      var badge = document.getElementById('control-bar-mode-badge');
+      var bar = document.getElementById('desktop-control-bar');
+
+      if (mode === 'desktop') {
+        if (root) {
+          root.classList.add('view-mode-desktop');
+          root.classList.remove('view-mode-mobile');
+        }
+        if (toggleIcon) toggleIcon.innerText = '📱';
+        if (toggleText) toggleText.innerText = 'Mobile Preview';
+        if (badge) badge.innerText = '💻 Desktop View';
+        if (bar) bar.style.maxWidth = '1360px';
+      } else {
+        if (root) {
+          root.classList.remove('view-mode-desktop');
+          root.classList.add('view-mode-mobile');
+        }
+        if (toggleIcon) toggleIcon.innerText = '💻';
+        if (toggleText) toggleText.innerText = 'Desktop View';
+        if (badge) badge.innerText = '📱 Mobile Preview';
+        if (bar) bar.style.maxWidth = '440px';
+      }
+    };
+
+    window.toggleViewMode = function() {
+      var next = (appState.viewMode === 'desktop') ? 'mobile' : 'desktop';
+      window.setViewMode(next);
+      showNotification("Switched to " + (next === 'desktop' ? 'Desktop View 💻' : 'Mobile Preview 📱'));
+    };
+
+    // --- QUICK ENTRY MODAL (SMOOTH BOTTOM SHEET) ---
+    var currentModalMode = 'nlp';
+    var tempReceiptData = { nlp: null, form: null };
+    var selectedFormCategory = 'Food';
+    var editingTxId = null;
+
+    window.openQuickEntryModal = function(preferNlp) {
+      if (preferNlp === undefined) preferNlp = true;
+      window.switchModalMode(preferNlp ? 'nlp' : 'form');
+      
+      var formDate = document.getElementById('form-date');
+      if (formDate) formDate.value = getLocalDateString();
+      highlightFormCategory('Food');
+
+      openModalElement('quick-entry-modal');
+    };
+
+    window.closeQuickEntryModal = function() {
+      closeModalElement('quick-entry-modal', function() {
+        stopVoiceRecognition();
+        resetEntryForm();
+      });
+    };
+
+    window.switchModalMode = function(mode) {
+      currentModalMode = mode;
+      var nlpEl = document.getElementById('entry-mode-nlp');
+      var formEl = document.getElementById('entry-mode-form');
+      if (nlpEl) nlpEl.classList.toggle('hidden', mode !== 'nlp');
+      if (formEl) formEl.classList.toggle('hidden', mode !== 'form');
+      
+      var btnNlp = document.getElementById('modal-tab-nlp');
+      var btnForm = document.getElementById('modal-tab-form');
+      if (mode === 'nlp') {
+        if (btnNlp) btnNlp.className = "liquid-btn-primary px-3 py-1 rounded-lg text-white font-bold";
+        if (btnForm) btnForm.className = "px-3 py-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]";
+      } else {
+        if (btnForm) btnForm.className = "liquid-btn-primary px-3 py-1 rounded-lg text-white font-bold";
+        if (btnNlp) btnNlp.className = "px-3 py-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]";
+      }
+    };
+
+    function highlightFormCategory(cat) {
+      selectedFormCategory = cat;
+      document.querySelectorAll('.form-cat-opt').forEach(function(btn) {
+        var isSel = btn.getAttribute('data-cat') === cat;
+        if (isSel) {
+          btn.className = "form-cat-opt liquid-btn-primary p-2 rounded-xl text-center text-white";
+        } else {
+          btn.className = "form-cat-opt liquid-btn-glass p-2 rounded-xl text-center text-[var(--text-primary)]";
+        }
+      });
+    }
+
+    document.querySelectorAll('.form-cat-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        highlightFormCategory(btn.getAttribute('data-cat'));
+      });
+    });
+
+    // --- RECEIPT HANDLERS ---
+    window.handleReceiptSelect = function(event, mode) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        showNotification("Please select a valid image file (PNG, JPG, WEBP).", "error");
+        event.target.value = '';
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          var ctx = canvas.getContext('2d');
+          var maxDim = 800;
+          var width = img.width;
+          var height = img.height;
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          var compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+          tempReceiptData[mode] = compressedBase64;
+          var thumb = document.getElementById(mode + '-receipt-thumb');
+          var imgEl = document.getElementById(mode + '-receipt-img');
+          var label = document.getElementById(mode + '-receipt-label');
+          if (thumb) thumb.classList.remove('hidden');
+          if (imgEl) imgEl.src = compressedBase64;
+          if (label) label.innerText = 'Receipt Attached ✓';
+          event.target.value = '';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.removeReceipt = function(mode) {
+      tempReceiptData[mode] = null;
+      var thumb = document.getElementById(mode + '-receipt-thumb');
+      var imgEl = document.getElementById(mode + '-receipt-img');
+      var label = document.getElementById(mode + '-receipt-label');
+      var fileInput = document.getElementById(mode + '-receipt-file');
+      if (thumb) thumb.classList.add('hidden');
+      if (imgEl) imgEl.src = '';
+      if (label) label.innerText = mode === 'nlp' ? 'Attach Receipt Photo' : 'Take Photo / Upload Bill';
+      if (fileInput) fileInput.value = '';
+    };
+
+    // --- NLP PARSER ---
+    function parseNaturalLanguage(text) {
+      if (!text || !text.trim()) {
+        return { amount: 0, category: 'Other', date: getLocalDateString(), note: '', tags: [] };
+      }
+
+      var clean = text.trim();
+      var amount = 0;
+      
+      // Match 'k' or 'K' multiplier (e.g. 2.5k, 10k, 1k, 1.2k)
+      var kMatch = clean.match(/(?:₹|rs\.?|inr|\$|\b)(\d+(?:\.\d+)?)\s*k\b/i);
+      if (kMatch) {
+        amount = Math.round(parseFloat(kMatch[1]) * 1000);
+      } else {
+        var amountRegex = /(?:₹|rs\.?|inr|\$|\b)(\d+(?:[.,]\d{1,2})?)\s*(?:rupees?|rs|bucks?|dollars?|₹|\b)/i;
+        var amountMatch = clean.match(amountRegex);
+        if (amountMatch) {
+          amount = parseFloat(amountMatch[1].replace(',', '.'));
+        }
+      }
+
+      var tags = (clean.match(/#\w+/g) || []).map(function(t) { return t.toLowerCase(); });
+
+      var date = new Date();
+      if (/\byesterday\b/i.test(clean)) {
+        date.setDate(date.getDate() - 1);
+      } else if (/\b(\d+)\s*days?\s*ago\b/i.test(clean)) {
+        var days = parseInt(clean.match(/\b(\d+)\s*days?\s*ago\b/i)[1], 10);
+        date.setDate(date.getDate() - days);
+      }
+      var formattedDate = getLocalDateString(date);
+
+      var category = 'Other';
+      var lower = clean.toLowerCase();
+      if (/food|lunch|dinner|breakfast|coffee|cafe|restaurant|burger|pizza|biryani|chai|tea|snack|grocer|swiggy|zomato|blinkit|zepto|instamart|bigbasket|market|dining|supermarket|mcdonald|domino|starbucks|subway|bakery|dosa|idli/i.test(lower)) {
+        category = 'Food';
+      } else if (/transport|uber|ola|rapido|cab|auto|taxi|metro|bus|train|petrol|diesel|fuel|cng|toll|parking|flight|indigo|airindia|irctc|scooty|bike/i.test(lower)) {
+        category = 'Transport';
+      } else if (/utilit|bill|electric|electricity|bescom|tneb|water|power|wifi|broadband|internet|phone|recharge|rent|jio|airtel|vi\b|vodafone|maintenance|lpg|gas|cylinder/i.test(lower)) {
+        category = 'Utilities';
+      } else if (/movie|cinema|netflix|hotstar|prime|spotify|game|stream|show|concert|entertainment|bookmyshow|pvr|inox|youtube|gaming|arcade/i.test(lower)) {
+        category = 'Entertainment';
+      } else if (/shop|store|amazon|flipkart|clothes|shoes|myntra|ajio|meesho|nykaa|buy|mall|zara|h&m|uniqlo|electronics|gadget/i.test(lower)) {
+        category = 'Shopping';
+      } else if (/health|doctor|medicine|pharmacy|dentist|gym|fitness|vitamin|hospital|apollo|1mg|pharmeasy|netmeds|cult|cultfit|clinic|consultation|test|lab/i.test(lower)) {
+        category = 'Health';
+      } else if (/travel|flight|hotel|airbnb|vacation|resort|trip|makemytrip|goibibo|oyo|tour|cleartrip|booking/i.test(lower)) {
+        category = 'Travel';
+      }
+
+      var note = clean
+        .replace(/#\w+/g, '')
+        .replace(/(?:₹|rs\.?|inr|\$|\b)\d+(?:\.\d+)?\s*k\b/gi, '')
+        .replace(/(?:₹|rs\.?|inr|\$|\b)\d+(?:[.,]\d{1,2})?\s*(?:rupees?|rs|bucks?|dollars?|₹|\b)/gi, '')
+        .replace(/\b(yesterday|today|\d+\s*days?\s*ago)\b/gi, '')
+        .replace(/\b(food|transport|utilities|entertainment|shopping|health|travel|other)\b/gi, '')
+        .trim();
+
+      if (!note) note = category + " expense";
+
+      return { amount: amount, category: category, date: formattedDate, note: note, tags: tags };
+    }
+
+    var nlpInput = document.getElementById('nlp-text-input');
+    if (nlpInput) {
+      nlpInput.addEventListener('input', function() {
+        updateNlpPreview(nlpInput.value);
+      });
+    }
+
+    function updateNlpPreview(text) {
+      var parsed = parseNaturalLanguage(text);
+      var elAmt = document.getElementById('nlp-preview-amount');
+      var elCat = document.getElementById('nlp-preview-cat');
+      var elDate = document.getElementById('nlp-preview-date');
+      var elTags = document.getElementById('nlp-preview-tags');
+
+      if (elAmt) elAmt.innerText = "₹" + formatINR(parsed.amount);
+      if (elCat) elCat.innerText = (CATEGORIES[parsed.category] ? CATEGORIES[parsed.category].icon : '📦') + " " + parsed.category;
+      if (elDate) elDate.innerText = parsed.date;
+      if (elTags) elTags.innerText = parsed.tags.length > 0 ? parsed.tags.join(' ') : 'None';
+    }
+
+    window.insertNlpSample = function(text) {
+      if (nlpInput) {
+        nlpInput.value = text;
+        updateNlpPreview(text);
+      }
+    };
+
+    // --- VOICE RECOGNITION ---
+    var speechRecognition = null;
+    var isListening = false;
+
+    function initSpeechRecognition() {
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return null;
+      
+      var rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.lang = 'en-IN';
+
+      rec.onstart = function() {
+        isListening = true;
+        var btn = document.getElementById('voice-record-btn');
+        var txt = document.getElementById('voice-status-text');
+        if (btn) btn.classList.add('listening-pulse', 'bg-rose-500');
+        if (txt) {
+          txt.innerText = "Listening... Speak now";
+          txt.className = "text-[11px] font-semibold text-rose-500 mt-2";
+        }
+      };
+
+      rec.onresult = function(event) {
+        var transcript = Array.from(event.results).map(function(r) { return r[0].transcript; }).join('');
+        if (nlpInput) {
+          nlpInput.value = transcript;
+          updateNlpPreview(transcript);
+        }
+      };
+
+      rec.onerror = function(event) {
+        console.warn("Speech recognition error:", event.error);
+        stopVoiceRecognition();
+        var txt = document.getElementById('voice-status-text');
+        if (txt) txt.innerText = "Mic blocked or requires HTTPS on phone. Type above!";
+      };
+
+      rec.onend = function() {
+        stopVoiceRecognition();
+      };
+
+      return rec;
+    }
+
+    window.toggleVoiceRecording = function() {
+      if (isListening) {
+        stopVoiceRecognition();
+      } else {
+        if (!speechRecognition) speechRecognition = initSpeechRecognition();
+        if (!speechRecognition) {
+          showNotification("Speech recognition is not supported in this browser. Type above!", "info");
+          return;
+        }
+        try {
+          speechRecognition.start();
+        } catch (e) {
+          console.warn("Already started or error", e);
+          var txt = document.getElementById('voice-status-text');
+          if (txt) txt.innerText = "Mic unavailable. Type above!";
+        }
+      }
+    };
+
+    function stopVoiceRecognition() {
+      isListening = false;
+      if (speechRecognition) {
+        try { speechRecognition.stop(); } catch(e){}
+      }
+      var btn = document.getElementById('voice-record-btn');
+      var txt = document.getElementById('voice-status-text');
+      if (btn) btn.classList.remove('listening-pulse', 'bg-rose-500');
+      if (txt) {
+        txt.innerText = "Tap mic to speak";
+        txt.className = "text-[11px] font-semibold text-[var(--text-secondary)] mt-2";
+      }
+    }
+
+    // --- SAVE EXPENSE & GOOGLE AUTO-SYNC ---
+    function checkCategoryBudgetAlert(category, addedAmount) {
+      var now = new Date();
+      var currentMonthStr = getLocalMonthString(now);
+      var catLimit = (appState.categoryBudgets && appState.categoryBudgets[category]) || 0;
+      if (catLimit <= 0) return;
+
+      var currentCatSpent = appState.transactions
+        .filter(function(t) { return t && t.category === category && t.date && t.date.startsWith(currentMonthStr); })
+        .reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+
+      var newTotal = currentCatSpent + addedAmount;
+      if (newTotal > catLimit) {
+        var over = newTotal - catLimit;
+        setTimeout(function() {
+          showNotification("⚠️ Alert: " + category + " is over budget by ₹" + formatINR(over), "warning");
+        }, 1500);
+      }
+    }
+
+    window.saveNlpExpense = function() {
+      var inputEl = document.getElementById('nlp-text-input');
+      var parsed = parseNaturalLanguage(inputEl ? inputEl.value : (nlpInput ? nlpInput.value : ''));
+      if (parsed.amount <= 0) {
+        showNotification("Please specify a valid expense amount in your text or voice input.", "error");
+        return;
+      }
+
+      var newTx = {
+        id: 'tx-' + Date.now(),
+        amount: parsed.amount,
+        category: parsed.category,
+        note: parsed.note,
+        date: parsed.date,
+        tags: parsed.tags,
+        receipt: tempReceiptData.nlp
+      };
+
+      checkCategoryBudgetAlert(newTx.category, newTx.amount);
+
+      appState.transactions.unshift(newTx);
+      saveState();
+      if (appState.user) window.backupToGoogleDrive(false);
+      window.closeQuickEntryModal();
+      showNotification("Added ₹" + formatINR(newTx.amount) + " to " + newTx.category);
+    };
+
+    window.saveManualExpense = function() {
+      var amtInput = document.getElementById('form-amount');
+      var amountVal = parseFloat(amtInput ? amtInput.value : 0);
+      if (isNaN(amountVal) || amountVal <= 0) {
+        showNotification("Please enter a valid expense amount.", "error");
+        return;
+      }
+
+      var noteInput = document.getElementById('form-note');
+      var note = (noteInput && noteInput.value.trim()) || (selectedFormCategory + " Expense");
+      var dateInput = document.getElementById('form-date');
+      var date = (dateInput && dateInput.value) || getLocalDateString();
+      var tagsInput = document.getElementById('form-tags');
+      var tagsRaw = tagsInput ? tagsInput.value : '';
+      var tags = tagsRaw.split(/[, ]+/).filter(function(t) { return t.length > 0; }).map(function(t) {
+        return t.startsWith('#') ? t.toLowerCase() : '#' + t.toLowerCase();
+      });
+
+      if (editingTxId) {
+        var existingIdx = appState.transactions.findIndex(function(t) { return t && t.id === editingTxId; });
+        if (existingIdx !== -1) {
+          appState.transactions[existingIdx] = {
+            id: editingTxId,
+            amount: amountVal,
+            category: selectedFormCategory,
+            note: note,
+            date: date,
+            tags: tags,
+            receipt: tempReceiptData.form || appState.transactions[existingIdx].receipt
+          };
+          checkCategoryBudgetAlert(selectedFormCategory, 0);
+          saveState();
+          if (appState.user) window.backupToGoogleDrive(false);
+          window.closeQuickEntryModal();
+          showNotification("✓ Updated expense: ₹" + formatINR(amountVal));
+          editingTxId = null;
+          return;
+        }
+      }
+
+      var newTx = {
+        id: 'tx-' + Date.now(),
+        amount: amountVal,
+        category: selectedFormCategory,
+        note: note,
+        date: date,
+        tags: tags,
+        receipt: tempReceiptData.form
+      };
+
+      checkCategoryBudgetAlert(newTx.category, newTx.amount);
+
+      appState.transactions.unshift(newTx);
+      saveState();
+      if (appState.user) window.backupToGoogleDrive(false);
+      window.closeQuickEntryModal();
+      showNotification("Saved ₹" + formatINR(newTx.amount));
+    };
+
+    function resetEntryForm() {
+      if (nlpInput) nlpInput.value = '';
+      updateNlpPreview('');
+      var amtInput = document.getElementById('form-amount');
+      var noteInput = document.getElementById('form-note');
+      var tagsInput = document.getElementById('form-tags');
+      var saveBtn = document.getElementById('form-save-btn');
+      var editBadge = document.getElementById('modal-edit-badge');
+      if (amtInput) amtInput.value = '';
+      if (noteInput) noteInput.value = '';
+      if (tagsInput) tagsInput.value = '';
+      if (saveBtn) saveBtn.innerText = 'Save Expense';
+      if (editBadge) editBadge.classList.add('hidden');
+      window.removeReceipt('nlp');
+      window.removeReceipt('form');
+      editingTxId = null;
+    }
+
+    // --- TOAST NOTIFICATIONS WITH SMOOTH SPRING ---
+    function showNotification(msg, type) {
+      var toast = document.createElement('div');
+      var baseClasses = "fixed top-8 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full text-xs font-bold shadow-2xl z-50 transition-all duration-300 pointer-events-none scale-90 opacity-0 flex items-center space-x-1.5 backdrop-blur-xl border ";
+      if (type === 'error') {
+        toast.className = baseClasses + "bg-rose-600/90 text-white border-rose-400/40 shadow-rose-900/50";
+      } else if (type === 'warning') {
+        toast.className = baseClasses + "bg-amber-600/90 text-white border-amber-400/40 shadow-amber-900/50";
+      } else if (type === 'info') {
+        toast.className = baseClasses + "bg-slate-800/95 text-white border-slate-600/50 shadow-black/60";
+      } else {
+        toast.className = baseClasses + "liquid-btn-primary border-white/30 shadow-blue-500/40 text-white";
+      }
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          toast.classList.remove('scale-90', 'opacity-0');
+          toast.classList.add('scale-100', 'opacity-100');
+        });
+      });
+      setTimeout(function() {
+        toast.classList.remove('scale-100', 'opacity-100');
+        toast.classList.add('scale-90', 'opacity-0');
+        setTimeout(function() { toast.remove(); }, 320);
+      }, 2500);
+    }
+
+    // --- RENDER FUNCTIONS ---
+    function renderAll() {
+      renderDashboard();
+      renderTransactionsList();
+      renderAnalytics();
+      renderSettings();
+    }
+
+    function renderDashboard() {
+      var now = new Date();
+      var currentMonthStr = getLocalMonthString(now);
+      var todayStr = getLocalDateString(now);
+
+      var monthlyTx = appState.transactions.filter(function(t) { return t && t.date && t.date.startsWith(currentMonthStr); });
+      var totalMonthSpent = monthlyTx.reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+      
+      var budgetCap = appState.budgetCap || 50000;
+      var remaining = Math.max(0, budgetCap - totalMonthSpent);
+      var percentUsed = Math.min(100, Math.round((totalMonthSpent / budgetCap) * 100));
+
+      var elSpent = document.getElementById('dash-total-spent');
+      var elCap = document.getElementById('dash-budget-cap');
+      var elRem = document.getElementById('dash-budget-remaining');
+      var elPct = document.getElementById('dash-budget-percent');
+      var progressBar = document.getElementById('dash-budget-progress-bar');
+      var badge = document.getElementById('dash-budget-badge');
+
+      if (elSpent) elSpent.innerText = "₹" + formatINR(totalMonthSpent);
+      if (elCap) elCap.innerText = "₹" + formatINR(budgetCap);
+      if (elRem) elRem.innerText = "₹" + formatINR(remaining);
+      if (elPct) elPct.innerText = percentUsed + "%";
+
+      if (progressBar) progressBar.style.width = percentUsed + "%";
+
+      if (badge) {
+        if (percentUsed >= 100) {
+          if (progressBar) progressBar.className = "h-full bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-all duration-800";
+          badge.className = "liquid-glass-subtle px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide text-rose-400";
+          badge.innerText = "Over Budget!";
+        } else if (percentUsed >= 75) {
+          if (progressBar) progressBar.className = "h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-800";
+          badge.className = "liquid-glass-subtle px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide text-amber-400";
+          badge.innerText = "Caution (>75%)";
+        } else {
+          if (progressBar) progressBar.className = "h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400 rounded-full transition-all duration-800";
+          badge.className = "liquid-glass-subtle px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide text-blue-400";
+          badge.innerText = "On Track";
+        }
+      }
+
+      var userGreeting = document.getElementById('dash-user-name');
+      var googleHeaderLabel = document.getElementById('header-google-label');
+      var cloudStatusText = document.getElementById('cloud-banner-status');
+      var cloudSubText = document.getElementById('cloud-banner-sub');
+      var desktopUserName = document.getElementById('desktop-user-name');
+      var desktopUserStatus = document.getElementById('desktop-user-status');
+
+      if (appState.user && appState.user.email) {
+        if (userGreeting) userGreeting.innerText = ", " + (appState.user.name || "Viraj");
+        if (googleHeaderLabel) googleHeaderLabel.innerText = appState.user.email.split('@')[0];
+        if (cloudStatusText) cloudStatusText.innerText = "Synced with " + appState.user.email;
+        if (cloudSubText) cloudSubText.innerText = "Last cloud backup: " + (appState.user.lastSync ? new Date(appState.user.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now");
+        if (desktopUserName) desktopUserName.innerText = appState.user.name || "Viraj";
+        if (desktopUserStatus) desktopUserStatus.innerText = "Gmail Synced";
+      } else {
+        if (userGreeting) userGreeting.innerText = "";
+        if (googleHeaderLabel) googleHeaderLabel.innerText = "Gmail Sync";
+        if (cloudStatusText) cloudStatusText.innerText = "Backup to Google / Gmail";
+        if (cloudSubText) cloudSubText.innerText = "Sign in to keep your data safe on Google Cloud";
+        if (desktopUserName) desktopUserName.innerText = "Viraj";
+        if (desktopUserStatus) desktopUserStatus.innerText = "Local Storage";
+      }
+
+      var catBudgetContainer = document.getElementById('dash-category-budgets-list');
+      if (catBudgetContainer) {
+        catBudgetContainer.innerHTML = '';
+        var catBudgets = appState.categoryBudgets || {};
+        var catSpending = {};
+        Object.keys(CATEGORIES).forEach(function(c) { catSpending[c] = 0; });
+        monthlyTx.forEach(function(t) {
+          var c = t.category || 'Other';
+          catSpending[c] = (catSpending[c] || 0) + (parseFloat(t.amount) || 0);
+        });
+
+        var budgetItems = Object.entries(catBudgets).filter(function(entry) { return entry[1] > 0; });
+
+        if (budgetItems.length === 0) {
+          catBudgetContainer.innerHTML = 
+            '<div class="p-4 text-center text-xs rounded-2xl liquid-glass-subtle border border-dashed border-[var(--border-subtle)] space-y-2">' +
+              '<p class="text-[var(--text-secondary)] font-medium">No custom category budgets set yet.</p>' +
+              '<button onclick="window.openEditBudgetModal(\'Food\')" class="liquid-btn-primary px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center space-x-1.5 shadow-md">' +
+                '<span>🎯 Set Custom Budget (e.g. Food)</span>' +
+              '</button>' +
+            '</div>';
+        } else {
+          budgetItems.forEach(function(entry) {
+            var cat = entry[0];
+            var limit = entry[1];
+            var spent = catSpending[cat] || 0;
+            var pct = Math.min(100, Math.round((spent / limit) * 100));
+            var meta = CATEGORIES[cat] || CATEGORIES.Other;
+            var isOver = spent > limit;
+            var isWarning = spent >= limit * 0.8 && !isOver;
+
+            var barColor = "bg-gradient-to-r from-blue-500 to-indigo-500";
+            var badgeText = pct + "%";
+            var badgeClass = "text-blue-400";
+
+            if (isOver) {
+              barColor = "bg-rose-500";
+              badgeText = "Over by ₹" + formatINR(spent - limit);
+              badgeClass = "text-rose-400";
+            } else if (isWarning) {
+              barColor = "bg-amber-500";
+              badgeText = pct + "% Warning";
+              badgeClass = "text-amber-400";
+            }
+
+            var row = document.createElement('div');
+            row.className = "liquid-glass-subtle p-2.5 rounded-2xl space-y-1.5 hover:scale-[1.01] active:scale-[0.99] transition cursor-pointer";
+            row.setAttribute('title', 'Tap to edit ' + meta.name + ' budget limit');
+            row.onclick = (function(c) {
+              return function() { window.openEditBudgetModal(c); };
+            })(cat);
+            row.innerHTML = 
+              '<div class="flex justify-between items-center text-xs">' +
+                '<div class="flex items-center space-x-1.5 font-semibold text-[var(--text-primary)]">' +
+                  '<span>' + meta.icon + '</span>' +
+                  '<span>' + meta.name + '</span>' +
+                  '<span class="text-[10px] text-blue-400 font-bold ml-1 opacity-75 hover:opacity-100">✎</span>' +
+                '</div>' +
+                '<div class="flex items-center space-x-2">' +
+                  '<span class="text-[11px] font-bold text-[var(--text-primary)]">₹' + formatINR(spent) + ' <span class="text-[var(--text-muted)] font-normal">/ ₹' + formatINR(limit) + '</span></span>' +
+                  '<span class="liquid-btn-glass px-1.5 py-0.5 rounded-full text-[9px] font-bold ' + badgeClass + '">' + badgeText + '</span>' +
+                '</div>' +
+              '</div>' +
+              '<div class="w-full h-1.5 bg-[var(--bg-input)] rounded-full overflow-hidden">' +
+                '<div class="h-full rounded-full ' + barColor + ' transition-all duration-700" style="width: ' + pct + '%"></div>' +
+              '</div>';
+            catBudgetContainer.appendChild(row);
+          });
+        }
+      }
+
+      var todayTx = appState.transactions.filter(function(t) { return t && t.date === todayStr; });
+      var todaySpent = todayTx.reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+      var elToday = document.getElementById('dash-today-spent');
+      var elTodayCount = document.getElementById('dash-today-count');
+      if (elToday) elToday.innerText = "₹" + formatINR(todaySpent);
+      if (elTodayCount) elTodayCount.innerText = todayTx.length + " transaction" + (todayTx.length === 1 ? '' : 's');
+
+      var weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - 7);
+      var weekTx = appState.transactions.filter(function(t) { return t && t.date && new Date(t.date) >= weekStart; });
+      var weekSpent = weekTx.reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+      var elWeek = document.getElementById('dash-week-spent');
+      var elWeekCount = document.getElementById('dash-week-count');
+      if (elWeek) elWeek.innerText = "₹" + formatINR(weekSpent);
+      if (elWeekCount) elWeekCount.innerText = weekTx.length + " transaction" + (weekTx.length === 1 ? '' : 's');
+
+      var recentList = document.getElementById('dash-recent-list');
+      if (recentList) {
+        recentList.innerHTML = '';
+        var recentTx = appState.transactions.slice(0, 4);
+
+        if (recentTx.length === 0) {
+          recentList.innerHTML = '<div class="liquid-glass-subtle p-6 text-center text-[var(--text-muted)] text-xs rounded-2xl">No expenses recorded yet.<br>Tap \'+\' to add one!</div>';
+        } else {
+          recentTx.forEach(function(tx) {
+            recentList.appendChild(createTransactionCardElement(tx));
+          });
+        }
+      }
+    }
+
+    function renderTransactionsList() {
+      var container = document.getElementById('full-transactions-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      var searchVal = (document.getElementById('tx-search-input') ? document.getElementById('tx-search-input').value : '').toLowerCase();
+      var catFilter = appState.activeFilter;
+
+      var filtered = appState.transactions.filter(function(tx) {
+        if (!tx) return false;
+        if (catFilter !== 'ALL' && tx.category !== catFilter) return false;
+        if (searchVal) {
+          var matchNote = (tx.note || '').toLowerCase().indexOf(searchVal) !== -1;
+          var matchCat = (tx.category || '').toLowerCase().indexOf(searchVal) !== -1;
+          var matchTags = (tx.tags || []).some(function(t) { return t.toLowerCase().indexOf(searchVal) !== -1; });
+          var matchAmount = (tx.amount || 0).toString().indexOf(searchVal) !== -1;
+          return matchNote || matchCat || matchTags || matchAmount;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="liquid-glass-subtle p-8 text-center text-[var(--text-muted)] text-xs rounded-2xl">No matching transactions found.</div>';
+        return;
+      }
+
+      filtered.forEach(function(tx) {
+        container.appendChild(createTransactionCardElement(tx, true));
+      });
+    }
+
+    function createTransactionCardElement(tx) {
+      var catMeta = CATEGORIES[tx.category] || CATEGORIES.Other;
+      var card = document.createElement('div');
+      card.className = "liquid-glass flex items-center justify-between p-3 rounded-2xl cursor-pointer transition shadow-sm active:scale-[0.98] hover:scale-[1.01] hover:border-blue-500/40";
+      card.onclick = function() { window.openTxDetailModal(tx.id); };
+
+      var hasReceipt = Boolean(tx.receipt);
+      var tagsHtml = (tx.tags || []).map(function(t) {
+        return '<span class="liquid-btn-glass px-1.5 py-0.5 rounded text-[var(--text-secondary)] text-[9px]">' + t + '</span>';
+      }).join(' ');
+
+      card.innerHTML = 
+        '<div class="flex items-center space-x-3 overflow-hidden">' +
+          '<div class="w-10 h-10 rounded-2xl flex items-center justify-center text-base flex-shrink-0 shadow-sm" style="background-color: ' + catMeta.bg + ';">' +
+            catMeta.icon +
+          '</div>' +
+          '<div class="truncate">' +
+            '<div class="flex items-center space-x-1.5">' +
+              '<span class="text-xs font-semibold text-[var(--text-primary)] truncate">' + (tx.note || 'Expense') + '</span>' +
+              (hasReceipt ? '<span title="Receipt attached" class="text-blue-400 text-[10px]">📷</span>' : '') +
+            '</div>' +
+            '<div class="flex items-center space-x-1.5 mt-0.5">' +
+              '<span class="text-[10px] text-[var(--text-muted)]">' + (tx.date || '') + '</span>' +
+              (tagsHtml ? '<div class="flex items-center space-x-1">' + tagsHtml + '</div>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="text-right flex-shrink-0 pl-2">' +
+          '<span class="text-sm font-bold text-[var(--text-primary)] block">-₹' + formatINR(parseFloat(tx.amount) || 0) + '</span>' +
+          '<span class="text-[9px] font-medium" style="color: ' + catMeta.color + ';">' + tx.category + '</span>' +
+        '</div>';
+      return card;
+    }
+
+    document.querySelectorAll('.cat-filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.cat-filter-btn').forEach(function(b) {
+          b.className = "cat-filter-btn liquid-btn-glass px-3 py-1.5 rounded-full text-[var(--text-secondary)] whitespace-nowrap";
+        });
+        btn.className = "cat-filter-btn liquid-btn-primary px-3 py-1.5 rounded-full whitespace-nowrap active-filter";
+        appState.activeFilter = btn.getAttribute('data-cat');
+        renderTransactionsList();
+      });
+    });
+
+    var searchInput = document.getElementById('tx-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        renderTransactionsList();
+      });
+    }
+
+    // --- ANALYTICS ---
+    function renderAnalytics() {
+      var now = new Date();
+      var filteredTx = [];
+
+      if (appState.activeTimeRange === 'month') {
+        var monthStr = getLocalMonthString(now);
+        filteredTx = appState.transactions.filter(function(t) { return t && t.date && t.date.startsWith(monthStr); });
+      } else if (appState.activeTimeRange === 'week') {
+        var weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() - 7);
+        var weekStartStr = getLocalDateString(weekStart);
+        filteredTx = appState.transactions.filter(function(t) { return t && t.date && t.date >= weekStartStr; });
+      } else {
+        filteredTx = appState.transactions || [];
+      }
+
+      var totalSpent = filteredTx.reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+      var elTotal = document.getElementById('donut-center-total');
+      if (elTotal) elTotal.innerText = "₹" + formatINR(totalSpent);
+
+      var catTotals = {};
+      Object.keys(CATEGORIES).forEach(function(c) { catTotals[c] = 0; });
+      filteredTx.forEach(function(t) {
+        var c = t.category || 'Other';
+        catTotals[c] = (catTotals[c] || 0) + (parseFloat(t.amount) || 0);
+      });
+
+      var donutSvg = document.getElementById('donut-svg');
+      if (donutSvg) {
+        donutSvg.innerHTML = '';
+        var radius = 38;
+        var circumference = 2 * Math.PI * radius;
+        var strokeOffset = 0;
+
+        var activeCategories = Object.entries(catTotals)
+          .filter(function(entry) { return entry[1] > 0; })
+          .sort(function(a, b) { return b[1] - a[1]; });
+
+        var emptyColor = appState.theme === 'light' ? '#e2e8f0' : '#27272a';
+
+        if (totalSpent === 0) {
+          var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', '50');
+          circle.setAttribute('cy', '50');
+          circle.setAttribute('r', radius);
+          circle.setAttribute('fill', 'transparent');
+          circle.setAttribute('stroke', emptyColor);
+          circle.setAttribute('stroke-width', '10');
+          donutSvg.appendChild(circle);
+        } else {
+          activeCategories.forEach(function(entry) {
+            var cat = entry[0];
+            var val = entry[1];
+            var sliceRatio = val / totalSpent;
+            var strokeLength = sliceRatio * circumference;
+
+            var slice = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            slice.setAttribute('cx', '50');
+            slice.setAttribute('cy', '50');
+            slice.setAttribute('r', radius);
+            slice.setAttribute('fill', 'transparent');
+            slice.setAttribute('stroke', CATEGORIES[cat] ? CATEGORIES[cat].color : '#94a3b8');
+            slice.setAttribute('stroke-width', '10');
+            slice.setAttribute('stroke-dasharray', strokeLength + " " + circumference);
+            slice.setAttribute('stroke-dashoffset', -strokeOffset);
+            slice.setAttribute('stroke-linecap', 'round');
+            donutSvg.appendChild(slice);
+
+            strokeOffset += strokeLength;
+          });
+        }
+
+        var legendContainer = document.getElementById('analytics-legend');
+        if (legendContainer) {
+          legendContainer.innerHTML = '';
+          if (activeCategories.length === 0) {
+            legendContainer.innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-2">No expenses in this time period.</p>';
+          } else {
+            activeCategories.forEach(function(entry) {
+              var cat = entry[0];
+              var val = entry[1];
+              var meta = CATEGORIES[cat] || CATEGORIES.Other;
+              var pct = Math.round((val / totalSpent) * 100);
+              var limit = (appState.categoryBudgets && appState.categoryBudgets[cat]) || 0;
+              var budgetNotice = limit > 0 ? '<span class="text-[9px] text-[var(--text-muted)]">of ₹' + formatINR(limit) + ' budget</span>' : '';
+
+              var item = document.createElement('div');
+              item.className = "flex items-center justify-between text-xs py-1 border-b border-[var(--border-subtle)] hover:pl-1 transition";
+              item.innerHTML = 
+                '<div class="flex items-center space-x-2">' +
+                  '<span class="w-2.5 h-2.5 rounded-full" style="background-color: ' + meta.color + ';"></span>' +
+                  '<span class="text-[var(--text-primary)] font-medium">' + meta.icon + ' ' + meta.name + '</span>' +
+                '</div>' +
+                '<div class="flex items-center space-x-2">' +
+                  '<div class="text-right">' +
+                    '<span class="font-bold text-[var(--text-primary)] block">₹' + formatINR(val) + '</span>' +
+                    budgetNotice +
+                  '</div>' +
+                  '<span class="text-[10px] text-[var(--text-muted)] w-8 text-right font-semibold">' + pct + '%</span>' +
+                '</div>';
+              legendContainer.appendChild(item);
+            });
+          }
+        }
+      }
+
+      // Bar Chart with Animated Heights
+      var barContainer = document.getElementById('velocity-bar-chart');
+      if (barContainer) {
+        barContainer.innerHTML = '';
+        var last7Days = [];
+        for (var i = 6; i >= 0; i--) {
+          var d = new Date(now);
+          d.setDate(d.getDate() - i);
+          var dStr = getLocalDateString(d);
+          var daySpent = appState.transactions
+            .filter(function(t) { return t && t.date === dStr; })
+            .reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+          last7Days.push({ date: dStr, dayLabel: d.toLocaleDateString('en-US', { weekday: 'narrow' }), amount: daySpent });
+        }
+
+        var maxDayAmount = Math.max.apply(Math, last7Days.map(function(d) { return d.amount; }).concat([1000]));
+
+        last7Days.forEach(function(day) {
+          var heightPct = Math.max(8, Math.round((day.amount / maxDayAmount) * 100));
+          var col = document.createElement('div');
+          col.className = "flex-1 flex flex-col items-center h-full justify-end group relative";
+          col.innerHTML = 
+            '<div class="liquid-btn-glass opacity-0 group-hover:opacity-100 absolute -top-7 text-blue-400 text-[9px] font-bold px-1.5 py-0.5 rounded shadow pointer-events-none transition duration-200 whitespace-nowrap">' +
+              '₹' + formatINR(day.amount) +
+            '</div>' +
+            '<div class="w-full max-w-[20px] rounded-t-lg bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-600 shadow-md shadow-blue-500/20" style="height: ' + heightPct + '%;"></div>' +
+            '<span class="text-[9px] text-[var(--text-muted)] font-medium mt-1.5">' + day.dayLabel + '</span>';
+          barContainer.appendChild(col);
+        });
+      }
+
+      var insightEl = document.getElementById('analytics-insight-text');
+      if (insightEl) {
+        var activeCategoriesList = Object.entries(catTotals).filter(function(entry) { return entry[1] > 0; }).sort(function(a, b) { return b[1] - a[1]; });
+        if (activeCategoriesList.length > 0) {
+          var topCat = activeCategoriesList[0];
+          var topMeta = CATEGORIES[topCat[0]] || CATEGORIES.Other;
+          var topPct = Math.round((topCat[1] / totalSpent) * 100);
+          insightEl.innerHTML = "Your largest spending category is <strong>" + topMeta.name + "</strong> (" + topPct + "% of expenses, ₹" + formatINR(topCat[1]) + "). " + 
+            (topPct > 40 ? "Consider tightening this category's custom budget." : "Your spending is well-balanced across multiple categories!");
+        } else {
+          insightEl.innerHTML = "Log more expenses to unlock personalized spending insights and predictive budget burn rates.";
+        }
+      }
+    }
+
+    document.querySelectorAll('.analytics-time-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.analytics-time-btn').forEach(function(b) {
+          b.className = "analytics-time-btn flex-1 py-1.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)]";
+        });
+        btn.className = "analytics-time-btn liquid-btn-primary flex-1 py-1.5 rounded-xl active-time";
+        appState.activeTimeRange = btn.getAttribute('data-range');
+        renderAnalytics();
+      });
+    });
+
+    // --- SETTINGS & BUDGETS ---
+    function renderSettings() {
+      var capInput = document.getElementById('setting-budget-input');
+      if (capInput) capInput.value = appState.budgetCap || 50000;
+      
+      var googleTitle = document.getElementById('settings-google-account-title');
+      var googleSub = document.getElementById('settings-google-account-sub');
+      var googleBtn = document.getElementById('settings-google-action-btn');
+
+      if (appState.user && appState.user.email) {
+        if (googleTitle) googleTitle.innerText = appState.user.name || "Google Connected";
+        if (googleSub) googleSub.innerText = appState.user.email + " • Synced to Google Cloud";
+        if (googleBtn) {
+          googleBtn.innerText = "Manage";
+          googleBtn.className = "liquid-btn-glass px-3 py-1 rounded-full text-xs font-bold text-blue-400";
+        }
+      } else {
+        if (googleTitle) googleTitle.innerText = "Google Account & Gmail";
+        if (googleSub) googleSub.innerText = "Not signed in • Data stored locally";
+        if (googleBtn) {
+          googleBtn.innerText = "Sign In";
+          googleBtn.className = "liquid-btn-primary px-3 py-1 rounded-full text-xs font-bold";
+        }
+      }
+
+      var catBudgetGrid = document.getElementById('settings-category-budgets-grid');
+      if (catBudgetGrid) {
+        var isAnyInputFocused = catBudgetGrid.contains(document.activeElement);
+        if (!isAnyInputFocused) {
+          catBudgetGrid.innerHTML = '';
+          if (!appState.categoryBudgets) appState.categoryBudgets = {};
+
+          Object.keys(CATEGORIES).forEach(function(cat) {
+            var meta = CATEGORIES[cat];
+            var currentCap = appState.categoryBudgets[cat] !== undefined ? appState.categoryBudgets[cat] : 0;
+
+            var row = document.createElement('div');
+            row.className = "liquid-glass-subtle flex items-center justify-between p-2.5 rounded-xl hover:scale-[1.01] transition";
+            row.innerHTML = 
+              '<div class="flex items-center space-x-2.5 cursor-pointer flex-1 mr-2" onclick="window.openEditBudgetModal(\'' + cat + '\')">' +
+                '<span class="text-base">' + meta.icon + '</span>' +
+                '<div>' +
+                  '<span class="text-xs font-bold text-[var(--text-primary)] block">' + meta.name + '</span>' +
+                  '<span class="text-[10px] text-blue-400 font-medium">Tap to edit details ✎</span>' +
+                '</div>' +
+              '</div>' +
+              '<div class="flex items-center space-x-1.5">' +
+                '<span class="text-xs font-bold text-blue-400">₹</span>' +
+                '<input type="number" step="100" min="0" value="' + currentCap + '" data-cat="' + cat + '" class="cat-budget-input liquid-glass w-24 px-2 py-1.5 rounded-lg text-xs font-bold text-[var(--text-primary)] text-right focus:outline-none focus:border-blue-500 transition">' +
+                '<button type="button" onclick="window.openEditBudgetModal(\'' + cat + '\')" class="liquid-btn-glass px-2 py-1.5 rounded-lg text-[10px] font-bold text-blue-400 hover:text-white" title="Adjust limit in modal">✎</button>' +
+              '</div>';
+            catBudgetGrid.appendChild(row);
+          });
+
+          document.querySelectorAll('.cat-budget-input').forEach(function(inp) {
+            inp.addEventListener('input', function(e) {
+              var cat = e.target.getAttribute('data-cat');
+              var val = Math.max(0, parseFloat(e.target.value) || 0);
+              appState.categoryBudgets[cat] = val;
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); } catch(err){}
+            });
+            inp.addEventListener('change', function(e) {
+              var cat = e.target.getAttribute('data-cat');
+              var val = Math.max(0, parseFloat(e.target.value) || 0);
+              appState.categoryBudgets[cat] = val;
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); } catch(err){}
+              renderDashboard();
+              renderAnalytics();
+              showNotification("Saved " + cat + " budget: ₹" + formatINR(val));
+            });
+          });
+        }
+      }
+
+      var tagsContainer = document.getElementById('tags-manager-list');
+      if (tagsContainer) {
+        tagsContainer.innerHTML = '';
+        (appState.customTags || []).forEach(function(tag) {
+          var chip = document.createElement('span');
+          chip.className = "liquid-glass-subtle inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-xs text-[var(--text-primary)] hover:scale-105 transition";
+          chip.innerHTML = 
+            '<span>' + tag + '</span>' +
+            '<button onclick="removeCustomTag(\'' + tag + '\')" class="text-[var(--text-muted)] hover:text-rose-500 ml-1 text-xs">✕</button>';
+          tagsContainer.appendChild(chip);
+        });
+      }
+    }
+
+    window.saveBudgetSetting = function() {
+      var capInput = document.getElementById('setting-budget-input');
+      var val = parseFloat(capInput ? capInput.value : 0);
+      if (isNaN(val) || val <= 0) {
+        showNotification("Please specify a valid overall budget amount.", "error");
+        return;
+      }
+      appState.budgetCap = val;
+      saveState();
+      showNotification("Overall monthly budget updated to ₹" + formatINR(val));
+    };
+
+    window.autoDistributeBudgets = function() {
+      var total = appState.budgetCap || 50000;
+      appState.categoryBudgets = {
+        Food: Math.round(total * 0.30),
+        Transport: Math.round(total * 0.12),
+        Utilities: Math.round(total * 0.12),
+        Entertainment: Math.round(total * 0.08),
+        Shopping: Math.round(total * 0.18),
+        Health: Math.round(total * 0.08),
+        Travel: Math.round(total * 0.07),
+        Other: Math.round(total * 0.05)
+      };
+      saveState();
+      showNotification("Budgets auto-balanced based on recommended allocations!");
+    };
+
+    window.saveAllCategoryBudgets = function() {
+      var inputs = document.querySelectorAll('.cat-budget-input');
+      if (inputs.length > 0) {
+        inputs.forEach(function(inp) {
+          var cat = inp.getAttribute('data-cat');
+          var val = Math.max(0, parseFloat(inp.value) || 0);
+          appState.categoryBudgets[cat] = val;
+        });
+      }
+      saveState();
+      if (appState.user) window.backupToGoogleDrive(false);
+      showNotification("✅ All custom category budgets saved successfully!");
+    };
+
+    // --- EDIT CATEGORY BUDGET MODAL LOGIC ---
+    var activeEditBudgetCat = 'Food';
+
+    window.openEditBudgetModal = function(cat) {
+      if (!cat || !CATEGORIES[cat]) cat = 'Food';
+      activeEditBudgetCat = cat;
+
+      var meta = CATEGORIES[cat] || CATEGORIES.Other;
+      var elIcon = document.getElementById('edit-budget-cat-icon');
+      var elName = document.getElementById('edit-budget-cat-name');
+      var elSpent = document.getElementById('edit-budget-cat-spent');
+      var elInput = document.getElementById('edit-budget-input');
+      var elSlider = document.getElementById('edit-budget-slider');
+
+      if (elIcon) elIcon.innerText = meta.icon;
+      if (elName) elName.innerText = meta.name;
+
+      var now = new Date();
+      var currentMonthStr = getLocalMonthString(now);
+      var currentSpent = (appState.transactions || [])
+        .filter(function(t) { return t && t.category === cat && t.date && t.date.startsWith(currentMonthStr); })
+        .reduce(function(sum, t) { return sum + (parseFloat(t.amount) || 0); }, 0);
+
+      if (elSpent) elSpent.innerText = "₹" + formatINR(currentSpent);
+
+      var currentLimit = (appState.categoryBudgets && appState.categoryBudgets[cat] !== undefined)
+        ? appState.categoryBudgets[cat]
+        : 0;
+
+      if (elInput) elInput.value = currentLimit > 0 ? currentLimit : '';
+      if (elSlider) {
+        var sliderMax = Math.max(50000, currentLimit > 0 ? Math.ceil(currentLimit / 10000) * 10000 : 50000);
+        elSlider.max = sliderMax;
+        elSlider.value = currentLimit;
+      }
+
+      openModalElement('edit-budget-modal');
+    };
+
+    window.closeEditBudgetModal = function() {
+      closeModalElement('edit-budget-modal');
+    };
+
+    window.adjustEditBudget = function(delta) {
+      var elInput = document.getElementById('edit-budget-input');
+      var current = parseFloat(elInput ? elInput.value : 0) || 0;
+      var updated = Math.max(0, current + delta);
+      if (elInput) elInput.value = updated > 0 ? updated : '';
+      window.syncEditBudgetSlider(updated);
+    };
+
+    window.setEditBudgetPreset = function(amount) {
+      var elInput = document.getElementById('edit-budget-input');
+      if (elInput) elInput.value = amount > 0 ? amount : '';
+      window.syncEditBudgetSlider(amount);
+    };
+
+    window.syncEditBudgetSlider = function(val) {
+      var elSlider = document.getElementById('edit-budget-slider');
+      var num = parseFloat(val) || 0;
+      if (elSlider) {
+        if (num > parseFloat(elSlider.max)) {
+          elSlider.max = Math.ceil(num / 10000) * 10000;
+        }
+        elSlider.value = num;
+      }
+    };
+
+    window.syncEditBudgetInput = function(val) {
+      var elInput = document.getElementById('edit-budget-input');
+      var num = parseFloat(val) || 0;
+      if (elInput) elInput.value = num > 0 ? num : '';
+    };
+
+    window.saveCategoryBudgetLimit = function() {
+      if (!activeEditBudgetCat) return;
+      var elInput = document.getElementById('edit-budget-input');
+      var val = Math.max(0, parseFloat(elInput ? elInput.value : 0) || 0);
+
+      if (!appState.categoryBudgets) appState.categoryBudgets = {};
+      appState.categoryBudgets[activeEditBudgetCat] = val;
+      saveState();
+
+      if (appState.user) window.backupToGoogleDrive(false);
+
+      var catName = CATEGORIES[activeEditBudgetCat] ? CATEGORIES[activeEditBudgetCat].name : activeEditBudgetCat;
+      if (val > 0) {
+        showNotification("🎯 Set " + catName + " budget to ₹" + formatINR(val));
+      } else {
+        showNotification("Removed custom limit for " + catName);
+      }
+
+      window.closeEditBudgetModal();
+    };
+
+    window.addNewCustomTag = function() {
+      var input = document.getElementById('new-tag-input');
+      var val = input ? input.value.trim() : '';
+      if (!val) return;
+      if (!val.startsWith('#')) val = '#' + val;
+      val = val.toLowerCase();
+
+      if (appState.customTags.indexOf(val) === -1) {
+        appState.customTags.push(val);
+        saveState();
+      }
+      if (input) input.value = '';
+    };
+
+    window.removeCustomTag = function(tag) {
+      appState.customTags = appState.customTags.filter(function(t) { return t !== tag; });
+      saveState();
+    };
+
+    // --- TRANSACTION DETAIL MODAL (SMOOTH DIALOG) ---
+    var activeDetailTxId = null;
+
+    window.openTxDetailModal = function(txId) {
+      var tx = appState.transactions.find(function(t) { return t && t.id === txId; });
+      if (!tx) return;
+      activeDetailTxId = txId;
+
+      var meta = CATEGORIES[tx.category] || CATEGORIES.Other;
+      var elBadge = document.getElementById('detail-category-badge');
+      var elAmt = document.getElementById('detail-amount');
+      var elNote = document.getElementById('detail-note');
+      var elDate = document.getElementById('detail-date');
+
+      if (elBadge) elBadge.innerText = meta.icon + " " + tx.category;
+      if (elAmt) elAmt.innerText = "₹" + formatINR(parseFloat(tx.amount) || 0);
+      if (elNote) elNote.innerText = tx.note || 'Expense';
+      if (elDate) elDate.innerText = "Logged on " + (tx.date || '');
+
+      var tagsContainer = document.getElementById('detail-tags-container');
+      if (tagsContainer) {
+        tagsContainer.innerHTML = '';
+        (tx.tags || []).forEach(function(t) {
+          var tagSpan = document.createElement('span');
+          tagSpan.className = "liquid-glass-subtle px-2 py-0.5 text-blue-400 rounded-lg text-xs font-medium";
+          tagSpan.innerText = t;
+          tagsContainer.appendChild(tagSpan);
+        });
+      }
+
+      var receiptBox = document.getElementById('detail-receipt-box');
+      var receiptImg = document.getElementById('detail-receipt-img');
+      if (tx.receipt) {
+        if (receiptBox) receiptBox.classList.remove('hidden');
+        if (receiptImg) receiptImg.src = tx.receipt;
+      } else {
+        if (receiptBox) receiptBox.classList.add('hidden');
+      }
+
+      var delBtn = document.getElementById('detail-delete-btn');
+      if (delBtn) {
+        delBtn.onclick = function() {
+          if (confirm("Delete this transaction?")) {
+            appState.transactions = appState.transactions.filter(function(t) { return t && t.id !== txId; });
+            saveState();
+            if (appState.user) window.backupToGoogleDrive(false);
+            window.closeTxDetailModal();
+            showNotification("Transaction deleted.");
+          }
+        };
+      }
+
+      openModalElement('tx-detail-modal');
+    };
+
+    window.closeTxDetailModal = function() {
+      closeModalElement('tx-detail-modal', function() {
+        activeDetailTxId = null;
+      });
+    };
+
+    window.editCurrentTransaction = function() {
+      if (!activeDetailTxId) return;
+      var tx = appState.transactions.find(function(t) { return t && t.id === activeDetailTxId; });
+      if (!tx) return;
+
+      editingTxId = tx.id;
+      window.closeTxDetailModal();
+
+      setTimeout(function() {
+        window.openQuickEntryModal(false);
+        var amtInput = document.getElementById('form-amount');
+        var noteInput = document.getElementById('form-note');
+        var dateInput = document.getElementById('form-date');
+        var tagsInput = document.getElementById('form-tags');
+        var saveBtn = document.getElementById('form-save-btn');
+        var editBadge = document.getElementById('modal-edit-badge');
+
+        if (amtInput) amtInput.value = tx.amount;
+        if (noteInput) noteInput.value = tx.note || '';
+        if (dateInput) dateInput.value = tx.date || '';
+        if (tagsInput) tagsInput.value = (tx.tags || []).join(', ');
+        if (saveBtn) saveBtn.innerText = "Update Expense";
+        if (editBadge) editBadge.classList.remove('hidden');
+
+        highlightFormCategory(tx.category || 'Food');
+
+        if (tx.receipt) {
+          tempReceiptData.form = tx.receipt;
+          var thumb = document.getElementById('form-receipt-thumb');
+          var imgEl = document.getElementById('form-receipt-img');
+          var label = document.getElementById('form-receipt-label');
+          if (thumb) thumb.classList.remove('hidden');
+          if (imgEl) imgEl.src = tx.receipt;
+          if (label) label.innerText = 'Receipt Attached ✓';
+        }
+      }, 350);
+    };
+
+    window.openFullscreenReceipt = function(src) {
+      var fullImg = document.getElementById('fullscreen-receipt-img');
+      if (fullImg) fullImg.src = src;
+      openModalElement('receipt-fullscreen-modal');
+    };
+
+    window.closeFullscreenReceipt = function() {
+      closeModalElement('receipt-fullscreen-modal');
+    };
+
+    // --- DATA BACKUP & RESTORE ---
+    window.exportDataBackup = function() {
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      var downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "ExpensePulse_Backup_" + getLocalDateString() + ".json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification("Backup downloaded successfully!");
+    };
+
+    window.exportDataCSV = function() {
+      if (!appState.transactions || appState.transactions.length === 0) {
+        showNotification("No transactions available to export.", "info");
+        return;
+      }
+
+      var rows = [["Date", "Category", "Amount (INR)", "Description", "Tags", "Receipt Attached"]];
+      appState.transactions.forEach(function(tx) {
+        if (!tx) return;
+        var date = tx.date || '';
+        var cat = (tx.category || 'Other').replace(/"/g, '""');
+        var amt = parseFloat(tx.amount) || 0;
+        var note = (tx.note || '').replace(/"/g, '""');
+        var tags = ((tx.tags || []).join('; ')).replace(/"/g, '""');
+        var hasReceipt = tx.receipt ? 'Yes' : 'No';
+
+        rows.push(['"' + date + '"', '"' + cat + '"', amt, '"' + note + '"', '"' + tags + '"', '"' + hasReceipt + '"']);
+      });
+
+      var csvContent = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(rows.map(function(r) { return r.join(','); }).join('\n'));
+      var downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", csvContent);
+      downloadAnchor.setAttribute("download", "ExpensePulse_Ledger_" + getLocalDateString() + ".csv");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification("CSV ledger exported successfully!");
+    };
+
+    window.importDataBackup = function(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var imported = JSON.parse(e.target.result);
+          if (imported && Array.isArray(imported.transactions)) {
+            appState = Object.assign(appState, imported);
+            saveState();
+            window.applyTheme(appState.theme || 'dark');
+            showNotification("Data restored successfully!");
+          } else {
+            showNotification("Invalid backup file format.", "error");
+          }
+        } catch (err) {
+          showNotification("Failed to parse JSON backup file.", "error");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    };
+
+    window.clearAllDataWithConfirmation = function() {
+      if (confirm("Are you sure you want to delete all transactions and reset the app? This cannot be undone.")) {
+        appState.transactions = [];
+        saveState();
+        showNotification("All data has been cleared.");
+      }
+    };
+
+    var quickSeedBtn = document.getElementById('quick-seed-btn');
+    if (quickSeedBtn) {
+      quickSeedBtn.addEventListener('click', function() {
+        window.seedSampleData(true);
+      });
+    }
+
+    // --- APPLICATION STARTUP ---
+    loadState();
+    var defaultMode = appState.viewMode || (window.innerWidth >= 768 ? 'desktop' : 'mobile');
+    window.setViewMode(defaultMode);
+
+    var startTab = appState.currentTab || 'dashboard';
+    appState.currentTab = ''; // reset so switchTab runs and highlights active tab
+    window.switchTab(startTab);
+    renderAll();
+  </script>
+</body>
+</html>
